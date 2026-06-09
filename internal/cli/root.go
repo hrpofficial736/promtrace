@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"log/slog"
 	"os"
 
+	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -18,12 +20,9 @@ to quickly create a Cobra application.`,
 }
 
 func Execute() {
+	logger.Init(slog.LevelDebug)
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
 	}
-}
-
-func init() {
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

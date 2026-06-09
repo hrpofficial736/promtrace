@@ -1,0 +1,108 @@
+package cli
+
+import (
+	"io"
+	"log/slog"
+	"time"
+
+	"github.com/hrpofficial736/promtrace/internal/config"
+	"github.com/hrpofficial736/promtrace/internal/logger"
+	"github.com/hrpofficial736/promtrace/internal/provider"
+	"github.com/hrpofficial736/promtrace/internal/replay"
+	"github.com/hrpofficial736/promtrace/internal/store"
+	"github.com/hrpofficial736/promtrace/internal/util"
+	"github.com/spf13/cobra"
+)
+
+var replayCommand *cobra.Command = &cobra.Command{
+	Use:   "replay",
+	Short: "used to replay the llm request",
+	Long:  "used to replay the llm request",
+	RunE:  replayRun,
+}
+
+func replayRun(cmd *cobra.Command, args []string) error {
+	logger.Init(slog.LevelDebug)
+
+	cfg, err := config.Load()
+
+	if err != nil {
+		logger.Log.Error("error while loading config", "error", err)
+		return err
+	}
+
+	st, err := store.NewSQLiteStore(cfg.DBPath)
+
+	if err != nil {
+		logger.Log.Error("error while making store", "error", err)
+		return err
+	}
+
+	t, err := st.GetTrace(args[0])
+
+	if err != nil {
+		logger.Log.Error("error while getting trace", "error", err)
+		return err
+	}
+
+	err = provider.ValidateModel(replayModelFlag, t.Host)
+
+	if err != nil {
+		return err
+	}
+
+	start := time.Now()
+
+	res, err := replay.ReplayRequest(t, replayModelFlag)
+
+	if err != nil {
+		logger.Log.Error("error while re-sending the request", "error", err)
+		return err
+	}
+
+	defer res.Body.Close()
+
+	resBytes, err := io.ReadAll(res.Body)
+
+	if err != nil {
+		logger.Log.Error("error reading response body", "error", err)
+		return err
+	}
+
+	newTrace := *t
+
+	newTrace.ID = util.GenerateID()
+
+	newTrace.SessionID = t.SessionID
+
+	newTrace.Timestamp = time.Now()
+
+	newTrace.Response = string(resBytes)
+
+	newTrace.StatusCode = res.StatusCode
+
+	newTrace.LatencyMs = time.Since(start).Milliseconds()
+
+	if replayModelFlag != "" {
+		newTrace.Model = replayModelFlag
+	}
+
+	err = st.SaveTrace(&newTrace)
+
+	if err != nil {
+		logger.Log.Error("error saving replay trace", "error", err)
+		return err
+	}
+
+	logger.Log.Info("replay successful")
+
+	return nil
+
+}
+
+var replayModelFlag string
+
+func init() {
+	replayCommand.Flags().StringVar(&replayModelFlag, "model", "", "model name")
+	rootCmd.AddCommand(replayCommand)
+}
