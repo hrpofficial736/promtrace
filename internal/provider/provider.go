@@ -5,18 +5,45 @@ import (
 	"os"
 )
 
+type ExtractedData struct {
+	Model        string
+	SystemPrompt string
+	UserPrompt   string
+	Response     string
+	Tokens       int
+	Cost         int
+}
+
+type Extractor interface {
+	ExtractRequest(body []byte, path string) (model, systemPrompt, userPrompt string)
+	ExtractResponse(body []byte) (response string, tokens int)
+}
+
+func GetExtractor(host string) Extractor {
+	switch hostProvider[host] {
+	case "openai":
+		return &OpenAIExtractor{}
+	case "gemini":
+		return &GeminiExtractor{}
+	case "anthropic":
+		return &AnthropicExtractor{}
+	default:
+		return nil
+	}
+}
+
 var modelProvider = map[string]string{
 	"gpt-4o":           "openai",
 	"gpt-4o-mini":      "openai",
 	"claude-3-sonnet":  "anthropic",
 	"claude-3-haiku":   "anthropic",
-	"gemini-2.5-flash": "google",
+	"gemini-2.5-flash": "gemini",
 }
 
 var hostProvider = map[string]string{
 	"api.openai.com":                    "openai",
 	"api.anthropic.com":                 "anthropic",
-	"generativelanguage.googleapis.com": "google",
+	"generativelanguage.googleapis.com": "gemini",
 }
 
 func GetAPIKey(host string) (string, error) {
@@ -26,7 +53,7 @@ func GetAPIKey(host string) (string, error) {
 	case "api.anthropic.com":
 		return os.Getenv("ANTHROPIC_API_KEY"), nil
 	case "generativelanguage.googleapis.com":
-		return os.Getenv("GOOGLE_API_KEY"), nil
+		return os.Getenv("GEMINI_API_KEY"), nil
 	default:
 		return "", fmt.Errorf("unknown provider: %s", host)
 	}

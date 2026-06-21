@@ -1,11 +1,13 @@
 package cli
 
 import (
-	"log/slog"
-
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/hrpofficial736/promtrace/internal/config"
 	"github.com/hrpofficial736/promtrace/internal/logger"
+	"github.com/hrpofficial736/promtrace/internal/store"
+	"github.com/hrpofficial736/promtrace/internal/tui"
 	"github.com/spf13/cobra"
+	"log/slog"
 )
 
 var watchCommand *cobra.Command = &cobra.Command{
@@ -18,10 +20,23 @@ var watchCommand *cobra.Command = &cobra.Command{
 func watchRun(cmd *cobra.Command, args []string) error {
 	logger.Init(slog.LevelDebug)
 
-	_, err := config.Load()
+	cfg, err := config.Load()
 
 	if err != nil {
 		logger.Log.Error("error while loading config", "error", err)
+		return err
+	}
+
+	st, err := store.NewSQLiteStore(cfg.DBPath)
+
+	if err != nil {
+		logger.Log.Error("error", "error", err)
+		return nil
+	}
+	m := tui.NewWatchModel(st)
+
+	if _, err := tea.NewProgram(m).Run(); err != nil {
+		logger.Log.Error("error", "error", err)
 		return err
 	}
 

@@ -3,6 +3,7 @@ package proxy
 import (
 	"bufio"
 	"bytes"
+	"compress/gzip"
 	"crypto/tls"
 	"io"
 	"net"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/hrpofficial736/promtrace/internal/certmanager"
 	"github.com/hrpofficial736/promtrace/internal/logger"
+	"github.com/hrpofficial736/promtrace/internal/provider"
 	"github.com/hrpofficial736/promtrace/internal/store"
 	"github.com/hrpofficial736/promtrace/internal/util"
 )
@@ -47,6 +49,7 @@ func (ps *ProxyServer) handleRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	host, _, _ := net.SplitHostPort(r.Host)
 	logger.Log.Info("host name is " + host)
 	// hijacking connection
@@ -117,8 +120,22 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 
 	resp.Body = io.NopCloser(bytes.NewReader(respBody))
 
+	if resp.Header.Get("Content-Encoding") == "gzip" {
+		gr, err := gzip.NewReader(bytes.NewReader(respBody))
+		if err == nil {
+			respBody, err = io.ReadAll(gr)
+			gr.Close()
+		}
+	}
+
+	latency := time.Since(start).Milliseconds()
+
+	ext := provider.GetExtractor(host)
+	model, sysPrompt, userPrompt := ext.ExtractRequest(reqBody, req.URL.Path)
+	response, tokens := ext.ExtractResponse(respBody)
+
+	logger.Log.Debug("DEBUG", "response text", response, "token count", tokens)
 	// saving the trace
-	logger.Log.Debug("data", "response body", resp)
 
 	ps.store.SaveTrace(
 		&store.Trace{
@@ -127,15 +144,15 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 			Timestamp:    time.Now(),
 			Host:         host,
 			Method:       req.Method,
-			Path:         req.Pattern,
-			Model:        "",
-			Tokens:       0,
+			Path:         req.URL.Path,
+			Model:        model,
+			Tokens:       tokens,
 			Cost:         0,
-			SystemPrompt: "",
-			UserPrompt:   "",
-			Response:     "",
-			StatusCode:   200,
-			LatencyMs:    100,
+			SystemPrompt: sysPrompt,
+			UserPrompt:   userPrompt,
+			Response:     response,
+			StatusCode:   resp.StatusCode,
+			LatencyMs:    latency,
 			CreatedAt:    time.Now(),
 		},
 	)

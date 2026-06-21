@@ -36,6 +36,8 @@ var setupCommand *cobra.Command = &cobra.Command{
 
 		cm.StoreRootCACertificateInSystemTrustStore()
 		// setup complete, promtrace is ready
+
+		fmt.Println(t)
 		return nil
 	},
 }
