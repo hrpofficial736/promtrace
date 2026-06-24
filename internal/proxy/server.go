@@ -150,6 +150,7 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 			Cost:         0,
 			SystemPrompt: sysPrompt,
 			UserPrompt:   userPrompt,
+			RequestBody:  string(reqBody),
 			Response:     response,
 			StatusCode:   resp.StatusCode,
 			LatencyMs:    latency,

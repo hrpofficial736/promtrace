@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"io"
 	"log/slog"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/hrpofficial736/promtrace/internal/provider"
 	"github.com/hrpofficial736/promtrace/internal/replay"
 	"github.com/hrpofficial736/promtrace/internal/store"
+	"github.com/hrpofficial736/promtrace/internal/tui"
 	"github.com/hrpofficial736/promtrace/internal/util"
 	"github.com/spf13/cobra"
 )
@@ -18,6 +20,7 @@ var replayCommand *cobra.Command = &cobra.Command{
 	Use:   "replay",
 	Short: "used to replay the llm request",
 	Long:  "used to replay the llm request",
+	Args:  cobra.ExactArgs(1),
 	RunE:  replayRun,
 }
 
@@ -45,10 +48,12 @@ func replayRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = provider.ValidateModel(replayModelFlag, t.Host)
+	if replayModelFlag != "" {
+		err = provider.ValidateModel(replayModelFlag, t.Host)
+		if err != nil {
+			return err
+		}
 
-	if err != nil {
-		return err
 	}
 
 	start := time.Now()
@@ -77,7 +82,7 @@ func replayRun(cmd *cobra.Command, args []string) error {
 
 	newTrace.Timestamp = time.Now()
 
-	newTrace.Response = string(resBytes)
+	newTrace.Response, newTrace.Tokens = provider.GetExtractor(t.Host).ExtractResponse(resBytes)
 
 	newTrace.StatusCode = res.StatusCode
 
@@ -94,7 +99,21 @@ func replayRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Log.Info("replay successful")
+	r1 := &tui.ReplayComparisonResponseStruct{
+		Model:          t.Model,
+		Latency:        int(t.LatencyMs),
+		Cost:           t.Cost,
+		ResponseLength: len(t.Response),
+	}
+
+	r2 := &tui.ReplayComparisonResponseStruct{
+		Model:          newTrace.Model,
+		Latency:        int(newTrace.LatencyMs),
+		Cost:           newTrace.Cost,
+		ResponseLength: len(newTrace.Response),
+	}
+
+	fmt.Println(tui.RenderReplay(r1, r2))
 
 	return nil
 

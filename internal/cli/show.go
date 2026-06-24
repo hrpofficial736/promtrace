@@ -1,11 +1,13 @@
 package cli
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/hrpofficial736/promtrace/internal/config"
 	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/store"
+	"github.com/hrpofficial736/promtrace/internal/tui"
 	"github.com/spf13/cobra"
 )
 
@@ -32,7 +34,8 @@ func showRun(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	logger.Log.Info("data", "trace is", trace)
+	fmt.Println(tui.RenderTraceInfoContainer(trace))
+
 	return nil
 }
 

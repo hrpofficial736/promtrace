@@ -4,10 +4,13 @@ import "github.com/charmbracelet/lipgloss"
 
 // colors
 var (
-	ColorPrimary   = lipgloss.Color("#FFFFFF")
-	ColorSecondary = lipgloss.Color("#6B7280")
-	ColorSuccess   = lipgloss.Color("#22C55E")
-	ColorError     = lipgloss.Color("#EF4444")
+	ColorPrimary    = lipgloss.Color("#FFFFFF")
+	ColorSecondary  = lipgloss.Color("#D1D5DB")
+	ColorTertiary   = lipgloss.Color("#5E4987")
+	ColorSuccess    = lipgloss.Color("#22C55E")
+	ColorError      = lipgloss.Color("#EF4444")
+	ColorHeaderText = lipgloss.Color("#A78BFA")
+	ColorSelected   = lipgloss.Color("#7C3AED")
 )
 
 // styles
@@ -15,8 +18,11 @@ var (
 var (
 	TitleStyle = lipgloss.NewStyle().
 			Bold(true).
-			Foreground(ColorPrimary).
-			PaddingLeft(1)
+			Foreground(ColorSelected)
+
+	HintStyle = lipgloss.NewStyle().
+			Bold(false).
+			Foreground(ColorHeaderText)
 
 	AddedStyle = lipgloss.NewStyle().
 			Foreground(ColorSuccess)
@@ -25,7 +31,7 @@ var (
 			Foreground(ColorError)
 
 	BoxStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(ColorSecondary).
+			Border(lipgloss.NormalBorder()).
+			BorderForeground(ColorTertiary).
 			Padding(0, 1)
 )

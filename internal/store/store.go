@@ -30,9 +30,9 @@ func NewSQLiteStore(dbPath string) (Store, error) {
 
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS traces (
-		id TEXT PRIMARY KEY, 
-		session_id TEXT,
-		timestamp DATETIME,
+		id 			  TEXT	PRIMARY KEY, 
+		session_id 	  TEXT,
+		timestamp     DATETIME,
 		host          TEXT,
 		method        TEXT,
 		path          TEXT,
@@ -41,6 +41,7 @@ func NewSQLiteStore(dbPath string) (Store, error) {
 		cost 		  INTEGER,
 		system_prompt TEXT,
 		user_prompt   TEXT,
+		request_body  TEXT,
 		response      TEXT,
 		status_code   INTEGER,
 		latency_ms    INTEGER,
@@ -58,8 +59,8 @@ func NewSQLiteStore(dbPath string) (Store, error) {
 
 func (s *sqliteStore) SaveTrace(trace *Trace) error {
 	_, err := s.db.Exec(
-		`INSERT INTO traces (id, session_id, timestamp, host, method, path, model, tokens, cost, system_prompt, user_prompt, response, status_code, latency_ms, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO traces (id, session_id, timestamp, host, method, path, model, tokens, cost, system_prompt, user_prompt, request_body, response, status_code, latency_ms, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		trace.ID,
 		trace.SessionID,
 		trace.Timestamp,
@@ -71,6 +72,7 @@ func (s *sqliteStore) SaveTrace(trace *Trace) error {
 		trace.Cost,
 		trace.SystemPrompt,
 		trace.UserPrompt,
+		trace.RequestBody,
 		trace.Response,
 		trace.StatusCode,
 		trace.LatencyMs,
@@ -98,6 +100,7 @@ func (s *sqliteStore) GetTrace(id string) (*Trace, error) {
 		&trace.Cost,
 		&trace.SystemPrompt,
 		&trace.UserPrompt,
+		&trace.RequestBody,
 		&trace.Response,
 		&trace.StatusCode,
 		&trace.LatencyMs,
@@ -138,6 +141,7 @@ func (s *sqliteStore) ListTraces(limit int) ([]*Trace, error) {
 			&trace.Cost,
 			&trace.SystemPrompt,
 			&trace.UserPrompt,
+			&trace.RequestBody,
 			&trace.Response,
 			&trace.StatusCode,
 			&trace.LatencyMs,
@@ -176,6 +180,7 @@ func (s *sqliteStore) ListAllTraces() ([]*Trace, error) {
 			&trace.Cost,
 			&trace.SystemPrompt,
 			&trace.UserPrompt,
+			&trace.RequestBody,
 			&trace.Response,
 			&trace.StatusCode,
 			&trace.LatencyMs,

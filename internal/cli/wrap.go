@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/hrpofficial736/promtrace/internal/proxy"
 	"github.com/hrpofficial736/promtrace/internal/store"
 	"github.com/hrpofficial736/promtrace/internal/subprocess"
+	"github.com/hrpofficial736/promtrace/internal/tui"
 	"github.com/hrpofficial736/promtrace/internal/util"
 	"github.com/spf13/cobra"
 )
@@ -28,6 +30,7 @@ func wrapRun(cmd *cobra.Command, args []string) error {
 	logger.Init(slog.LevelDebug)
 	if err != nil {
 		logger.Log.Error("error while loading config", "error", err)
+		fmt.Println(tui.RenderStatus(false, "error while launching subprocess, please try again!"))
 		return err
 	}
 	logger.Log.Info("entered the wrap run function")
@@ -35,10 +38,12 @@ func wrapRun(cmd *cobra.Command, args []string) error {
 	cm, err := certmanager.NewCertManager(cfg)
 	if err != nil {
 		logger.Log.Error("error while making new cert manager", "error", err)
+		fmt.Println(tui.RenderStatus(false, "error while launching subprocess, please try again!"))
 		return err
 	}
 	if err := cm.LoadCA(); err != nil {
 		logger.Log.Error("error while loading CA", "error", err)
+		fmt.Println(tui.RenderStatus(false, "error while launching subprocess, please try again!"))
 		return err
 	}
 
@@ -49,6 +54,7 @@ func wrapRun(cmd *cobra.Command, args []string) error {
 	st, err := store.NewSQLiteStore(cm.GetDBPath())
 
 	if err != nil {
+		fmt.Println(tui.RenderStatus(false, "error while launching subprocess, please try again!"))
 		return err
 	}
 	logger.Log.Info("store bnne ke baad bhi hu")
@@ -69,8 +75,11 @@ func wrapRun(cmd *cobra.Command, args []string) error {
 	child, err := subprocess.LaunchChildProcessWithEnvVars(args, "127.0.0.1:9117", cm.GetCertPath())
 	if err != nil {
 		logger.Log.Error("error while launching child subprocess", "error", err)
+		fmt.Println(tui.RenderStatus(false, "error while launching subprocess, please try again!"))
 		return err
 	}
+
+	fmt.Println(tui.RenderStatus(true, "executing child process..."))
 
 	err = child.Wait()
 

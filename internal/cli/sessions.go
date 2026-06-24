@@ -1,11 +1,13 @@
 package cli
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/hrpofficial736/promtrace/internal/config"
 	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/store"
+	"github.com/hrpofficial736/promtrace/internal/tui"
 	"github.com/spf13/cobra"
 )
 
@@ -36,9 +38,7 @@ func sessionsRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	for _, s := range sessions {
-		logger.Log.Info("", "session", s)
-	}
+	fmt.Println(tui.RenderSessions(sessions))
 
 	return nil
 }

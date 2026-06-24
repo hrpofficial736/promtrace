@@ -1,11 +1,13 @@
 package cli
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/hrpofficial736/promtrace/internal/config"
 	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/store"
+	"github.com/hrpofficial736/promtrace/internal/tui"
 	"github.com/hrpofficial736/promtrace/internal/util"
 	"github.com/spf13/cobra"
 )
@@ -27,7 +29,12 @@ func statsRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	st, _ := store.NewSQLiteStore(cfg.DBPath)
+	st, err := store.NewSQLiteStore(cfg.DBPath)
+
+	if err != nil {
+		logger.Log.Error("error while parsing duration", "error", err)
+		return err
+	}
 
 	duration, err := util.ParseDuration(statsFormatFlag)
 
@@ -40,10 +47,11 @@ func statsRun(cmd *cobra.Command, args []string) error {
 
 	if err != nil {
 		logger.Log.Error("error", "error in getting stats", err)
-		return nil
+		return err
 	}
 
-	logger.Log.Info("stats of last "+statsFormatFlag, "stats", stats)
+	fmt.Println(tui.RenderStats(stats))
+
 	return nil
 }
 

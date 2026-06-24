@@ -33,6 +33,7 @@ func watchRun(cmd *cobra.Command, args []string) error {
 		logger.Log.Error("error", "error", err)
 		return nil
 	}
+
 	m := tui.NewWatchModel(st)
 
 	if _, err := tea.NewProgram(m).Run(); err != nil {

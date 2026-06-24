@@ -4,44 +4,67 @@ import (
 	"github.com/hrpofficial736/promtrace/internal/store"
 )
 
-func diffStrings(s1, s2 string) {
+type StringDiffModel struct {
+	Identical bool
+	Old       string
+	New       string
+}
+
+type NumericDiffModel struct {
+	A         int
+	B         int
+	Delta     int
+	PctChange float64
+}
+
+type DiffResponseModel struct {
+	SystemPrompt   *StringDiffModel
+	UserPrompt     *StringDiffModel
+	ResponseLength *NumericDiffModel
+	Cost           *NumericDiffModel
+	Latency        *NumericDiffModel
+}
+
+func diffStrings(s1, s2 string) *StringDiffModel {
+	response := &StringDiffModel{}
 	if s1 == s2 {
-		// identical
+		response.Identical = true
 	} else {
-		// - removed
-		// + added
+		response.Old = s1
+		response.New = s2
 	}
+
+	return response
 }
 
-func diffNumbers(a, b int) {
-	if a == b {
-		// identical
-	} else {
-		pct := float64(b-a) / float64(a) * 100
-		// sign := "+"
-		if pct < 0 {
-			// sign = ""
-		}
+func diffNumbers(a, b int) *NumericDiffModel {
 
-		// print numbers with % change
+	response := &NumericDiffModel{A: a, B: b, Delta: b - a}
+
+	if a != 0 {
+		response.PctChange = (float64(b-a) / float64(a) * 100)
 	}
+
+	return response
+
 }
 
-func DiffTraces(t1, t2 *store.Trace) error {
+func DiffTraces(t1, t2 *store.Trace) (*DiffResponseModel, error) {
+	diffResponse := &DiffResponseModel{}
 	// system prompt diff
-	diffStrings(t1.SystemPrompt, t2.SystemPrompt)
+	diffResponse.SystemPrompt = diffStrings(t1.SystemPrompt, t2.SystemPrompt)
 
 	// user prompt diff
-	diffStrings(t1.UserPrompt, t2.UserPrompt)
+	diffResponse.UserPrompt = diffStrings(t1.UserPrompt, t2.UserPrompt)
 
 	// response length
-	diffNumbers(len(t1.Response), len(t2.Response))
+	diffResponse.ResponseLength = diffNumbers(len(t1.Response), len(t2.Response))
 
 	// cost
-	diffNumbers(t1.Cost, t2.Cost)
+	diffResponse.Cost = diffNumbers(t1.Cost, t2.Cost)
 
 	// latency
-	diffNumbers(int(t1.LatencyMs), int(t2.LatencyMs))
+	diffResponse.Latency = diffNumbers(int(t1.LatencyMs), int(t2.LatencyMs))
 
-	return nil
+	return diffResponse, nil
 }
