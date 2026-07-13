@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-
-	"github.com/hrpofficial736/promtrace/internal/logger"
 )
 
 type ProviderConfig struct {
@@ -28,7 +26,7 @@ type ExtractedData struct {
 
 type Extractor interface {
 	ExtractRequest(body []byte, path string) (model, systemPrompt, userPrompt string)
-	ExtractResponse(body []byte) (response string, tokens int)
+	ExtractResponse(body []byte) (response string, inputTokens, outputTokens int)
 }
 
 func GetExtractor(host string) Extractor {

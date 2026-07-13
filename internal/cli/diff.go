@@ -2,8 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"log/slog"
-
 	"github.com/hrpofficial736/promtrace/internal/config"
 	"github.com/hrpofficial736/promtrace/internal/diff"
 	"github.com/hrpofficial736/promtrace/internal/logger"
@@ -21,12 +19,11 @@ var diffCommand *cobra.Command = &cobra.Command{
 }
 
 func diffRun(cmd *cobra.Command, args []string) error {
-	logger.Init(slog.LevelDebug)
 
 	cfg, err := config.Load()
 
 	if err != nil {
-		logger.Log.Error("error while loading config", "error", err)
+		fmt.Println(fmt.Errorf("error while loading config: %s", err))
 		return err
 	}
 
@@ -36,8 +33,17 @@ func diffRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	t1, _ := st.GetTrace(args[0])
-	t2, _ := st.GetTrace(args[1])
+	t1, err := st.GetTrace(args[0])
+	if err != nil {
+		logger.Log.Error("trace not found", "error", err)
+		return err
+	}
+
+	t2, err := st.GetTrace(args[1])
+	if err != nil {
+		logger.Log.Error("trace not found", "error", err)
+		return err
+	}
 
 	result, err := diff.DiffTraces(t1, t2)
 

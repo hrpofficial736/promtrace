@@ -2,9 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"log/slog"
-	"time"
-
 	"github.com/hrpofficial736/promtrace/internal/certmanager"
 	"github.com/hrpofficial736/promtrace/internal/config"
 	"github.com/hrpofficial736/promtrace/internal/logger"
@@ -14,6 +11,7 @@ import (
 	"github.com/hrpofficial736/promtrace/internal/tui"
 	"github.com/hrpofficial736/promtrace/internal/util"
 	"github.com/spf13/cobra"
+	"time"
 )
 
 var wrapCommand *cobra.Command = &cobra.Command{
@@ -27,13 +25,11 @@ var wrapCommand *cobra.Command = &cobra.Command{
 
 func wrapRun(cmd *cobra.Command, args []string) error {
 	cfg, err := config.Load()
-	logger.Init(slog.LevelDebug)
 	if err != nil {
 		logger.Log.Error("error while loading config", "error", err)
 		fmt.Println(tui.RenderStatus(false, "error while launching subprocess, please try again!"))
 		return err
 	}
-	logger.Log.Info("entered the wrap run function")
 	// load CA
 	cm, err := certmanager.NewCertManager(cfg)
 	if err != nil {
@@ -47,32 +43,28 @@ func wrapRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	logger.Log.Info("yha tk aaya")
-
 	// creating the store
 
-	st, err := store.NewSQLiteStore(cm.GetDBPath())
+	st, err := store.NewSQLiteStore(cfg.DBPath)
 
 	if err != nil {
 		fmt.Println(tui.RenderStatus(false, "error while launching subprocess, please try again!"))
 		return err
 	}
-	logger.Log.Info("store bnne ke baad bhi hu")
 
 	defer st.Close()
 
 	sessionID := util.GenerateID()
 
-	logger.Log.Info("id bhi generate ho gyi")
-
 	// start proxy server
-	ps := proxy.NewServer(cm, st, ":9117", sessionID)
+	port := fmt.Sprintf(":%d", cfg.Proxy.Port)
+	ps := proxy.NewServer(cm, st, port, sessionID)
 	go ps.StartServer()
 
 	time.Sleep(100 * time.Millisecond)
 
 	// launch subprocess
-	child, err := subprocess.LaunchChildProcessWithEnvVars(args, "127.0.0.1:9117", cm.GetCertPath())
+	child, err := subprocess.LaunchChildProcessWithEnvVars(args, "127.0.0.1"+port, cm.GetCertPath())
 	if err != nil {
 		logger.Log.Error("error while launching child subprocess", "error", err)
 		fmt.Println(tui.RenderStatus(false, "error while launching subprocess, please try again!"))

@@ -1,0 +1,10 @@
+
+{
+  "content": [
+    {"text": "Rust is a systems programming language focused on safety."}
+  ],
+  "usage": {
+    "input_tokens": 18,
+    "output_tokens": 11
+  }
+}

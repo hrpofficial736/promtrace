@@ -1,0 +1,15 @@
+
+{
+  "system_instruction": {
+    "parts": [
+      {"text": "You are a Go expert"}
+    ]
+  },
+  "contents": [
+    {
+      "parts": [
+        {"text": "Explain goroutines"}
+      ]
+    }
+  ]
+}

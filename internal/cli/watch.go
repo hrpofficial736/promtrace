@@ -7,7 +7,6 @@ import (
 	"github.com/hrpofficial736/promtrace/internal/store"
 	"github.com/hrpofficial736/promtrace/internal/tui"
 	"github.com/spf13/cobra"
-	"log/slog"
 )
 
 var watchCommand *cobra.Command = &cobra.Command{
@@ -18,7 +17,6 @@ var watchCommand *cobra.Command = &cobra.Command{
 }
 
 func watchRun(cmd *cobra.Command, args []string) error {
-	logger.Init(slog.LevelDebug)
 
 	cfg, err := config.Load()
 
@@ -34,7 +32,7 @@ func watchRun(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	m := tui.NewWatchModel(st)
+	m := tui.NewWatchModel(st, cfg.Watch.Limit)
 
 	if _, err := tea.NewProgram(m).Run(); err != nil {
 		logger.Log.Error("error", "error", err)

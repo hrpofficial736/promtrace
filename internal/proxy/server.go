@@ -5,16 +5,17 @@ import (
 	"bytes"
 	"compress/gzip"
 	"crypto/tls"
-	"io"
-	"net"
-	"net/http"
-	"time"
-
 	"github.com/hrpofficial736/promtrace/internal/certmanager"
 	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/provider"
 	"github.com/hrpofficial736/promtrace/internal/store"
 	"github.com/hrpofficial736/promtrace/internal/util"
+	"github.com/hrpofficial736/promtrace/pkg/costable"
+	"github.com/hrpofficial736/promtrace/pkg/tokenizer"
+	"io"
+	"net"
+	"net/http"
+	"time"
 )
 
 type ProxyServer struct {
@@ -51,7 +52,6 @@ func (ps *ProxyServer) handleRequest(w http.ResponseWriter, r *http.Request) {
 func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	host, _, _ := net.SplitHostPort(r.Host)
-	logger.Log.Info("host name is " + host)
 	// hijacking connection
 	hijacker, _ := w.(http.Hijacker)
 	clientConn, _, _ := hijacker.Hijack()
@@ -71,6 +71,7 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 	tlsConn := tls.Server(clientConn, tlsConfig)
 	if err := tlsConn.Handshake(); err != nil {
 		logger.Log.Error("error while handshaking with the subprocess", "error", err)
+		return
 	}
 
 	// reading decrypted HTTP request from the subprocess
@@ -79,6 +80,7 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logger.Log.Error("error while reading request", "error", err)
+		return
 	}
 
 	reqBody, err := io.ReadAll(req.Body)
@@ -91,22 +93,22 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 
 	req.Body = io.NopCloser(bytes.NewReader(reqBody))
 
-	logger.Log.Debug("data", "request content", req)
-
 	// opening real tls connection with the actual original real server
 	upstreamConn, err := tls.Dial("tcp", r.Host, &tls.Config{})
 
 	if err != nil {
 		logger.Log.Error("error while opening real connection with the actual server", "error", err)
+		return
 	}
 	// forwarding request to the real server
 	req.Write(upstreamConn)
 
 	// reading response from the real server
-	resp, _ := http.ReadResponse(bufio.NewReader(upstreamConn), req)
+	resp, err := http.ReadResponse(bufio.NewReader(upstreamConn), req)
 
 	if err != nil {
-		logger.Log.Error("error while opening real connection with the actual server", "error", err)
+		logger.Log.Error("error while reading response from the actual server", "error", err)
+		return
 	}
 
 	respBody, err := io.ReadAll(resp.Body)
@@ -132,9 +134,15 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 
 	ext := provider.GetExtractor(host)
 	model, sysPrompt, userPrompt := ext.ExtractRequest(reqBody, req.URL.Path)
-	response, tokens := ext.ExtractResponse(respBody)
+	response, inTokens, outTokens := ext.ExtractResponse(respBody)
 
-	logger.Log.Debug("DEBUG", "response text", response, "token count", tokens)
+	if inTokens == 0 && outTokens == 0 {
+		inTokens = tokenizer.EstimateTokens(string(reqBody))
+		outTokens = tokenizer.EstimateTokens(response)
+	}
+
+	cost := costable.CalculateCost(model, inTokens, outTokens)
+
 	// saving the trace
 
 	ps.store.SaveTrace(
@@ -146,8 +154,8 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 			Method:       req.Method,
 			Path:         req.URL.Path,
 			Model:        model,
-			Tokens:       tokens,
-			Cost:         0,
+			Tokens:       inTokens + outTokens,
+			Cost:         int(cost * 1000),
 			SystemPrompt: sysPrompt,
 			UserPrompt:   userPrompt,
 			RequestBody:  string(reqBody),

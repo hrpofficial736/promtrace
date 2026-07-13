@@ -2,8 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"log/slog"
-
 	"github.com/hrpofficial736/promtrace/internal/config"
 	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/store"
@@ -19,14 +17,18 @@ var showCommand *cobra.Command = &cobra.Command{
 }
 
 func showRun(cmd *cobra.Command, args []string) error {
-	logger.Init(slog.LevelDebug)
 	cfg, err := config.Load()
 	if err != nil {
 		logger.Log.Error("error while loading config", "error", err)
 		return err
 	}
 
-	st, _ := store.NewSQLiteStore(cfg.DBPath)
+	st, err := store.NewSQLiteStore(cfg.DBPath)
+
+	if err != nil {
+		logger.Log.Error("error while initializing store", "error", err)
+		return err
+	}
 
 	trace, err := st.GetTrace(args[0])
 	if err != nil {

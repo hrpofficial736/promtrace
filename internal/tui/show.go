@@ -2,15 +2,14 @@ package tui
 
 import (
 	"fmt"
-	"strconv"
-
 	"github.com/charmbracelet/lipgloss"
 	"github.com/hrpofficial736/promtrace/internal/store"
 	"github.com/hrpofficial736/promtrace/internal/util"
+	"strconv"
 )
 
 func RenderTraceInfoContainer(t *store.Trace) string {
-	titleText := RenderText(Heading, util.GetPromtraceHeadingAsciiText()+"\nTrace Information: "+t.ID+"\n", 0, 1)
+	titleText := RenderText(Heading, util.GetPromtraceHeadingAsciiText()+"\nTrace Information: "+t.ID+"\n")
 
 	basicInfo := RenderText(Hint, fmt.Sprintf(`
  Call: %s
@@ -25,19 +24,19 @@ func RenderTraceInfoContainer(t *store.Trace) string {
 		t.Timestamp.Format("Jan 02 15:04:02"),
 		strconv.Itoa(int(t.LatencyMs)),
 		strconv.Itoa(t.Tokens),
-		strconv.Itoa(t.Cost),
-	), 0, 0)
+		fmt.Sprintf("$%.4f", float64(t.Cost)/10000),
+	))
 
 	systemPrompt := BoxStyle.Render(
-		RenderText(Hint, "System Prompt", 0, 0) + "\n" + t.SystemPrompt,
+		RenderText(Hint, "System Prompt") + "\n" + t.SystemPrompt,
 	)
 
 	userPrompt := BoxStyle.Render(
-		RenderText(Hint, "User Prompt", 0, 0) + "\n" + t.UserPrompt,
+		RenderText(Hint, "User Prompt") + "\n" + t.UserPrompt,
 	)
 
 	responseText := BoxStyle.Render(
-		RenderText(Hint, "Response", 0, 0) + "\n" + t.Response,
+		RenderText(Hint, "Response") + "\n" + t.Response,
 	)
 
 	tb := lipgloss.NewStyle().

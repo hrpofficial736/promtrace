@@ -10,14 +10,14 @@ import (
 )
 
 func RenderStats(stats *store.Stats) string {
-	titleText := RenderText(Heading, util.GetPromtraceHeadingAsciiText()+"\nStats: ", 0, 0)
+	titleText := RenderText(Heading, util.GetPromtraceHeadingAsciiText()+"\nStats: ")
 
 	summary := RenderText(Hint, fmt.Sprintf(`
 Total Calls: %s
 Total Tokens: %s
 Total Cost: %s
 Avg Latency: %s
-	`, strconv.Itoa(stats.TotalCalls), strconv.Itoa(stats.TotalTokens), strconv.Itoa(stats.TotalCost), strconv.Itoa(stats.AvgLatency)), 0, 0)
+	`, strconv.Itoa(stats.TotalCalls), strconv.Itoa(stats.TotalTokens), fmt.Sprintf("%.4f", float64(stats.TotalCost)), strconv.Itoa(stats.AvgLatency)))
 
 	cols := []string{"DATE", "CALLS", "TOKENS", "COST", "AVG LATENCY"}
 

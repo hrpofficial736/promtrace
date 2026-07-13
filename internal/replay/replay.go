@@ -3,13 +3,12 @@ package replay
 import (
 	"bytes"
 	"encoding/json"
-	"net/http"
-	"strings"
-	"time"
-
 	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/provider"
 	"github.com/hrpofficial736/promtrace/internal/store"
+	"net/http"
+	"strings"
+	"time"
 )
 
 func ReplayRequest(trace *store.Trace, modelFlag string) (*http.Response, error) {

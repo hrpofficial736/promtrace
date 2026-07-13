@@ -58,7 +58,6 @@ func (cm *CertManager) GetDBPath() string {
 }
 
 func (cm *CertManager) GenerateRootCACertificate() error {
-	logger.Log.Info("entered ca certificate generation")
 	privKey, pubKey, err := generateCAKeyPair()
 
 	if err != nil {
@@ -125,7 +124,6 @@ func (cm *CertManager) GenerateRootCACertificate() error {
 func (cm *CertManager) StoreRootCACertificateInSystemTrustStore() {
 	var installer truststore.TrustStoreInstaller
 
-	logger.Log.Debug("runtime os name", "os is", runtime.GOOS)
 	switch runtime.GOOS {
 	case "darwin":
 		installer = truststore.DarwinInstaller{}

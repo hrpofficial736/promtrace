@@ -43,17 +43,17 @@ func (e *AnthropicExtractor) ExtractRequest(body []byte, path string) (string, s
 	return req.Model, req.System, userPrompt
 }
 
-func (e *AnthropicExtractor) ExtractResponse(body []byte) (string, int) {
+func (e *AnthropicExtractor) ExtractResponse(body []byte) (string, int, int) {
 	var res *anthropicResponse
 
 	if err := json.Unmarshal(body, &res); err != nil {
 		logger.Log.Error("error", "error", err)
-		return "", 0
+		return "", 0, 0
 	}
 
 	if len(res.Content) > 0 {
-		return res.Content[0].Text, res.Usage.InputTokens + res.Usage.OutputTokens
+		return res.Content[0].Text, res.Usage.InputTokens, res.Usage.OutputTokens
 	}
 
-	return "", 0
+	return "", 0, 0
 }

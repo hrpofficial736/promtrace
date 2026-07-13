@@ -2,10 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"io"
-	"log/slog"
-	"time"
-
 	"github.com/hrpofficial736/promtrace/internal/config"
 	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/provider"
@@ -14,6 +10,8 @@ import (
 	"github.com/hrpofficial736/promtrace/internal/tui"
 	"github.com/hrpofficial736/promtrace/internal/util"
 	"github.com/spf13/cobra"
+	"io"
+	"time"
 )
 
 var replayCommand *cobra.Command = &cobra.Command{
@@ -25,8 +23,6 @@ var replayCommand *cobra.Command = &cobra.Command{
 }
 
 func replayRun(cmd *cobra.Command, args []string) error {
-	logger.Init(slog.LevelDebug)
-
 	cfg, err := config.Load()
 
 	if err != nil {
@@ -82,7 +78,11 @@ func replayRun(cmd *cobra.Command, args []string) error {
 
 	newTrace.Timestamp = time.Now()
 
-	newTrace.Response, newTrace.Tokens = provider.GetExtractor(t.Host).ExtractResponse(resBytes)
+	extractorRes, inTokens, outTokens := provider.GetExtractor(t.Host).ExtractResponse(resBytes)
+
+	newTrace.Tokens = inTokens + outTokens
+
+	newTrace.Response = extractorRes
 
 	newTrace.StatusCode = res.StatusCode
 

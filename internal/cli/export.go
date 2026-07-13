@@ -3,14 +3,12 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
-	"os"
-
 	"github.com/hrpofficial736/promtrace/internal/config"
 	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/store"
 	"github.com/hrpofficial736/promtrace/internal/tui"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var exportCommand *cobra.Command = &cobra.Command{
@@ -21,7 +19,6 @@ var exportCommand *cobra.Command = &cobra.Command{
 }
 
 func exportRun(cmd *cobra.Command, args []string) error {
-	logger.Init(slog.LevelDebug)
 
 	cfg, err := config.Load()
 
@@ -44,7 +41,7 @@ func exportRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	encoder := json.NewEncoder(os.Stderr)
+	encoder := json.NewEncoder(os.Stdout)
 
 	for _, t := range traces {
 		encoder.Encode(t)

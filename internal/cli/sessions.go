@@ -2,8 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"log/slog"
-
 	"github.com/hrpofficial736/promtrace/internal/config"
 	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/store"
@@ -19,7 +17,6 @@ var sessionsCommand *cobra.Command = &cobra.Command{
 }
 
 func sessionsRun(cmd *cobra.Command, args []string) error {
-	logger.Init(slog.LevelDebug)
 
 	cfg, err := config.Load()
 	if err != nil {

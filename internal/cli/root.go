@@ -1,27 +1,39 @@
 package cli
 
 import (
-	"log/slog"
-	"os"
-
+	"fmt"
+	"github.com/hrpofficial736/promtrace/internal/config"
 	"github.com/hrpofficial736/promtrace/internal/logger"
+	"github.com/hrpofficial736/promtrace/internal/tui"
+	"github.com/hrpofficial736/promtrace/internal/util"
 	"github.com/spf13/cobra"
+	"os"
 )
 
-var rootCmd = &cobra.Command{
-	Use:   "promtrace",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+var rootLongText string = tui.BoxWrapper(
+	tui.RenderText(
+		tui.Heading,
+		util.GetPromtraceHeadingAsciiText()+
+			"\n"+
+			"promtrace intercepts LLM API calls from any process, logs prompts, responses, tokens, and cost — with zero code changes."+
+			fmt.Sprintf("\n\nrun %s to get started.", tui.RenderText(tui.Hint, "'promtrace setup'")),
+	))
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+var rootCmd = &cobra.Command{
+	Use:  "promtrace",
+	Long: rootLongText,
 }
 
 func Execute() {
-	logger.Init(slog.LevelDebug)
-	err := rootCmd.Execute()
+	cfg, err := config.Load()
+	if err != nil {
+		fmt.Println(fmt.Errorf("error loading config: %s", err))
+		return
+	}
+
+	logger.Init(cfg.Logging.Level)
+
+	err = rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
 	}

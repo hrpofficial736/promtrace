@@ -1,0 +1,19 @@
+# prices in USD per 1 million tokens
+# source: official provider pages
+
+models:
+  gpt-4o:
+    input: 2.50
+    output: 10.00
+  gpt-4o-mini:
+    input: 0.15
+    output: 0.60
+  claude-3-5-sonnet:
+    input: 3.00
+    output: 15.00
+  claude-3-haiku:
+    input: 0.25
+    output: 1.25
+  gemini-2.5-flash:
+    input: 0.15
+    output: 0.60

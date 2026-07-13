@@ -1,0 +1,16 @@
+
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {"text": "Goroutines are lightweight threads managed by the Go runtime."}
+        ]
+      }
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 12,
+    "candidatesTokenCount": 10
+  }
+}

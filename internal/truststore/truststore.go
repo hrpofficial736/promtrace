@@ -7,9 +7,8 @@
 package truststore
 
 import (
-	"os/exec"
-
 	"github.com/hrpofficial736/promtrace/internal/logger"
+	"os/exec"
 )
 
 type TrustStoreInstaller interface {
@@ -51,7 +50,6 @@ func (d DarwinInstaller) Uninstall(certPath string) error {
 type LinuxInstaller struct{}
 
 func (l LinuxInstaller) Install(certPath string) error {
-	logger.Log.Info("starting installation")
 	// Step 1: ensure the directory exists
 	cmd1 := exec.Command("sudo", "mkdir", "-p", "/usr/local/share/ca-certificates")
 	if err := cmd1.Run(); err != nil {

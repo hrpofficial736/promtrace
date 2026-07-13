@@ -127,6 +127,8 @@ func (s *sqliteStore) ListTraces(limit int) ([]*Trace, error) {
 		return nil, err
 	}
 
+	defer rows.Close()
+
 	for rows.Next() {
 		var trace *Trace = &Trace{}
 		err := rows.Scan(
@@ -165,6 +167,8 @@ func (s *sqliteStore) ListAllTraces() ([]*Trace, error) {
 		logger.Log.Error("error while getting all the traces in listing traces", "error", err)
 		return nil, err
 	}
+
+	defer rows.Close()
 
 	for rows.Next() {
 		var trace *Trace = &Trace{}
@@ -210,6 +214,8 @@ func (s *sqliteStore) ListSessions() ([]*Session, error) {
 		logger.Log.Error("error while fetching sessions from DB", "error", err)
 		return nil, err
 	}
+
+	defer rows.Close()
 
 	for rows.Next() {
 		var session *Session = &Session{}
@@ -266,6 +272,8 @@ func (s *sqliteStore) GetStats(since time.Duration) (*Stats, error) {
 		logger.Log.Error("error while fetching stats from db", "error", err)
 		return nil, err
 	}
+
+	defer rows.Close()
 
 	for rows.Next() {
 		var t trendData

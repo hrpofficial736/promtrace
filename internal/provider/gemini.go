@@ -28,7 +28,8 @@ type geminiResponse struct {
 		} `json:"content"`
 	} `json:"candidates"`
 	UsageMetadata struct {
-		TotalTokenCount int `json:"totalTokenCount"`
+		PromptTokenCount     int `json:"promptTokenCount"`
+		CandidatesTokenCount int `json:"candidatesTokenCount"`
 	} `json:"usageMetadata"`
 }
 
@@ -58,17 +59,17 @@ func (e *GeminiExtractor) ExtractRequest(body []byte, path string) (string, stri
 	return modelName, req.SystemInstruction.Parts[0].Text, req.Contents[len(req.Contents)-1].Parts[0].Text
 }
 
-func (e *GeminiExtractor) ExtractResponse(body []byte) (string, int) {
+func (e *GeminiExtractor) ExtractResponse(body []byte) (string, int, int) {
 	var res *geminiResponse
 
 	if err := json.Unmarshal(body, &res); err != nil {
 		logger.Log.Error("error", "error in gemini response extractor", err)
-		return "", 0
+		return "", 0, 0
 	}
 
 	if len(res.Candidates) > 0 {
-		return res.Candidates[0].Content.Parts[0].Text, res.UsageMetadata.TotalTokenCount
+		return res.Candidates[0].Content.Parts[0].Text, res.UsageMetadata.PromptTokenCount, res.UsageMetadata.CandidatesTokenCount
 	}
 
-	return "", 0
+	return "", 0, 0
 }

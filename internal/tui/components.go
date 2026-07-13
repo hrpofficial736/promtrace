@@ -18,18 +18,22 @@ func RenderStatus(success bool, text string) string {
 type TextType int
 
 const (
-	Heading = iota
+	Title = iota
+	Heading
 	Hint
+	Body
 )
 
-func RenderText(textType TextType, text string, x, y int) string {
+func RenderText(textType TextType, text string) string {
 	switch textType {
+	case Title:
+		return TitleStyle.Render(text)
 	case Heading:
-		return TitleStyle.Padding(x, y).Render(text)
+		return BoldHeadingStyle.Render(text)
 	case Hint:
-		return HintStyle.Padding(x, y).Render(text)
+		return HintStyle.Render(text)
 	default:
-		return HintStyle.Padding(x, y).Render(text)
+		return BodyStyle.Render(text)
 	}
 }
 
@@ -42,4 +46,12 @@ func RenderTable(cols []string, rows [][]string) string {
 		Rows(rows...)
 
 	return t.Render()
+}
+
+func RenderCommandDescription(cmdName, description string) string {
+	return RenderText(Heading, cmdName) + "\n" + RenderText(Body, description)
+}
+
+func BoxWrapper(content string) string {
+	return BoxStyle.Render(content)
 }

@@ -17,7 +17,7 @@ type ReplayComparisonResponseStruct struct {
 
 func RenderReplay(r1, r2 *ReplayComparisonResponseStruct) string {
 
-	titleText := RenderText(Heading, util.GetPromtraceHeadingAsciiText()+"\nReplay Comparison: ", 0, 0)
+	titleText := RenderText(Heading, util.GetPromtraceHeadingAsciiText()+"\nReplay Comparison: ")
 
 	modelsText := fmt.Sprintf(`
 	%s:  %sms, $%s, %s chars response

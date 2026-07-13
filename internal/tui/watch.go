@@ -15,11 +15,13 @@ type WatchModel struct {
 	store  store.Store
 	cursor int
 	traces []*store.Trace
+	limit  int
 }
 
-func NewWatchModel(s store.Store) WatchModel {
+func NewWatchModel(s store.Store, l int) WatchModel {
 	m := WatchModel{
 		store: s,
+		limit: l,
 	}
 
 	return m
@@ -36,7 +38,7 @@ func tickEvery() tea.Cmd {
 
 func (m WatchModel) fetchTraces() tea.Cmd {
 	return func() tea.Msg {
-		traces, err := m.store.ListTraces(20)
+		traces, err := m.store.ListTraces(m.limit)
 		if err != nil {
 			logger.Log.Error("error", "error", err)
 			return err
@@ -81,7 +83,7 @@ func (m WatchModel) View() string {
 
 	// title section
 
-	title := RenderText(Heading, util.GetPromtraceHeadingAsciiText()+"\n", 0, 1) + RenderText(Hint, "\n 🌏 Live Traces ", 0, 1)
+	title := RenderText(Heading, util.GetPromtraceHeadingAsciiText()+"\n") + RenderText(Hint, "\n 🌏 Live Traces ")
 
 	var rows [][]string
 
@@ -115,15 +117,15 @@ func (m WatchModel) View() string {
 					Background(ColorSelected).
 					Align(lipgloss.Center, lipgloss.Center).
 					Bold(true).
-					Padding(0, 0)
+					Padding()
 			}
 			return lipgloss.NewStyle().
 				Foreground(ColorSecondary).
 				Align(lipgloss.Center, lipgloss.Center).
-				Padding(0, 0)
+				Padding()
 		})
 
-	help := RenderText(Hint, "\n press ↑/↓ to navigate and q to quit\n", 0, 0)
+	help := RenderText(Hint, "\n press ↑/↓ to navigate and q to quit\n")
 
 	return lipgloss.JoinVertical(lipgloss.Left, title, t.Render(), help)
 

@@ -2,8 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"log/slog"
-
 	"github.com/hrpofficial736/promtrace/internal/config"
 	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/store"
@@ -20,7 +18,6 @@ var statsCommand *cobra.Command = &cobra.Command{
 }
 
 func statsRun(cmd *cobra.Command, args []string) error {
-	logger.Init(slog.LevelDebug)
 
 	cfg, err := config.Load()
 
@@ -58,6 +55,6 @@ func statsRun(cmd *cobra.Command, args []string) error {
 var statsFormatFlag string
 
 func init() {
-	statsCommand.Flags().StringVar(&statsFormatFlag, "last", "7d", "stats")
+	statsCommand.Flags().StringVar(&statsFormatFlag, "last", "7d", "time window (e.g., 7d, 24h, 30m)")
 	rootCmd.AddCommand(statsCommand)
 }

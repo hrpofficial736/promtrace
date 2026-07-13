@@ -1,0 +1,7 @@
+
+{
+  "choices": [
+    {"message": {"content": "Go is a programming language."}}
+  ],
+  "usage": {"prompt_tokens": 15, "completion_tokens": 8}
+}

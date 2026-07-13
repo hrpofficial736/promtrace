@@ -20,7 +20,8 @@ type openaiResponse struct {
 		} `json:"message"`
 	} `json:"choices"`
 	Usage struct {
-		TotalTokens int `json:"total_tokens"`
+		PromptTokens     int `json:"prompt_tokens"`
+		CompletionTokens int `json:"completion_tokens"`
 	} `json:"usage"`
 }
 
@@ -45,17 +46,17 @@ func (e *OpenAIExtractor) ExtractRequest(body []byte, path string) (string, stri
 	return req.Model, sysPrompt, userPrompt
 }
 
-func (e *OpenAIExtractor) ExtractResponse(body []byte) (string, int) {
+func (e *OpenAIExtractor) ExtractResponse(body []byte) (string, int, int) {
 	var res *openaiResponse
 
 	if err := json.Unmarshal(body, &res); err != nil {
 		logger.Log.Error("error", "error", err)
-		return "", 0
+		return "", 0, 0
 	}
 
 	if len(res.Choices) > 0 {
-		return res.Choices[0].Message.Content, res.Usage.TotalTokens
+		return res.Choices[0].Message.Content, res.Usage.PromptTokens, res.Usage.CompletionTokens
 	}
 
-	return "", 0
+	return "", 0, 0
 }

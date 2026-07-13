@@ -2,8 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"log/slog"
-
 	"github.com/hrpofficial736/promtrace/internal/certmanager"
 	"github.com/hrpofficial736/promtrace/internal/config"
 	"github.com/hrpofficial736/promtrace/internal/logger"
@@ -11,30 +9,31 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var setupLongText string = tui.RenderCommandDescription("setup", "This command generates root CA and installs it in the OS trust store.")
+
 var setupCommand *cobra.Command = &cobra.Command{
-	Use:   "setup",
-	Short: "setup tls",
-	Long:  "setup tls",
+	Use:                   "setup",
+	Short:                 "setup tls",
+	Long:                  setupLongText,
+	DisableFlagsInUseLine: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logger.Init(slog.LevelDebug)
 		cfg, err := config.Load()
 
 		if err != nil {
 			logger.Log.Error("error while loading config", "error", err)
-			fmt.Println(tui.RenderStatus(false, "Error generatinc certificates, please try again!"))
+			fmt.Println(tui.RenderStatus(false, "Error generating certificates, please try again!"))
 			return err
 		}
-		fmt.Println("setup called")
 		cm, err := certmanager.NewCertManager(cfg)
 		if err != nil {
 			logger.Log.Info("error while generating cert manager")
-			fmt.Println(tui.RenderStatus(false, "Error generatinc certificates, please try again!"))
+			fmt.Println(tui.RenderStatus(false, "Error generating certificates, please try again!"))
 			return err
 		}
 
 		if err := cm.GenerateRootCACertificate(); err != nil {
 			logger.Log.Info("error while generating ca cert")
-			fmt.Println(tui.RenderStatus(false, "Error generatinc certificates, please try again!"))
+			fmt.Println(tui.RenderStatus(false, "Error generating certificates, please try again!"))
 			return err
 		}
 
