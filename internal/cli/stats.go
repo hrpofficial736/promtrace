@@ -10,11 +10,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var statsLongText string = tui.BoxWrapper(
+	tui.RenderCommandDescription(
+		"stats",
+		"This command displays the stats of the LLM usage since the specified duration.",
+	),
+)
 var statsCommand *cobra.Command = &cobra.Command{
-	Use:   "stats",
-	Short: "shows stats of the llm usage",
-	Long:  "shows stats of the llm usage",
-	RunE:  statsRun,
+	Use:     "stats",
+	Example: "  promtrace stats --last 7d",
+	Short:   "Show cost and token trends over time",
+	Long:    statsLongText,
+	RunE:    statsRun,
 }
 
 func statsRun(cmd *cobra.Command, args []string) error {

@@ -14,12 +14,20 @@ import (
 	"time"
 )
 
+var replayLongText string = tui.BoxWrapper(
+	tui.RenderCommandDescription(
+		"replay",
+		"This command re-sends a captured LLM request, optionally with a different model from the same provider. Saves the result as a new trace and compares it against the original.",
+	),
+)
 var replayCommand *cobra.Command = &cobra.Command{
-	Use:   "replay",
-	Short: "used to replay the llm request",
-	Long:  "used to replay the llm request",
-	Args:  cobra.ExactArgs(1),
-	RunE:  replayRun,
+	Use:                   "replay <TRACE_ID> --model <MODEL_NAME>",
+	Example:               "  promtrace replay a3f7b2c1 --model gpt-4o-mini",
+	Short:                 "Re-send a captured LLM call with an optional model swap",
+	Long:                  replayLongText,
+	DisableFlagsInUseLine: true,
+	Args:                  cobra.ExactArgs(1),
+	RunE:                  replayRun,
 }
 
 func replayRun(cmd *cobra.Command, args []string) error {
@@ -122,6 +130,6 @@ func replayRun(cmd *cobra.Command, args []string) error {
 var replayModelFlag string
 
 func init() {
-	replayCommand.Flags().StringVar(&replayModelFlag, "model", "", "model name")
+	replayCommand.Flags().StringVar(&replayModelFlag, "model", "", "model to use for replay (must be from same provider)")
 	rootCmd.AddCommand(replayCommand)
 }

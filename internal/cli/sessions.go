@@ -9,11 +9,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var sessionsLongText string = tui.BoxWrapper(
+	tui.RenderCommandDescription(
+		"sessions",
+		"This command lists all recorded sessions with aggregate stats: total calls, cost, tokens, and average latency.",
+	),
+)
 var sessionsCommand *cobra.Command = &cobra.Command{
-	Use:   "sessions",
-	Short: "used to list all the sessions in this device",
-	Long:  "used to list all the sessions in this device",
-	RunE:  sessionsRun,
+	Use:                   "sessions",
+	Short:                 "List all sessions with aggregate stats",
+	DisableFlagsInUseLine: true,
+	Long:                  sessionsLongText,
+	RunE:                  sessionsRun,
 }
 
 func sessionsRun(cmd *cobra.Command, args []string) error {

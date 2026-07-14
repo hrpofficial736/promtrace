@@ -9,11 +9,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var watchLongText string = tui.BoxWrapper(
+	tui.RenderCommandDescription(
+		"watch",
+		"This command displays all the intercepted traces within current session in real time as the requests arrive.",
+	),
+)
 var watchCommand *cobra.Command = &cobra.Command{
-	Use:   "watch",
-	Short: "used to display live traces",
-	Long:  "used to display live traces",
-	RunE:  watchRun,
+	Use:                   "watch",
+	Short:                 "Live trace feed — updates in real time",
+	DisableFlagsInUseLine: true,
+	Long:                  watchLongText,
+	RunE:                  watchRun,
 }
 
 func watchRun(cmd *cobra.Command, args []string) error {

@@ -15,9 +15,9 @@ var rootLongText string = tui.BoxWrapper(
 		tui.Heading,
 		util.GetPromtraceHeadingAsciiText()+
 			"\n"+
-			"promtrace intercepts LLM API calls from any process, logs prompts, responses, tokens, and cost — with zero code changes."+
-			fmt.Sprintf("\n\nrun %s to get started.", tui.RenderText(tui.Hint, "'promtrace setup'")),
-	))
+			"promtrace intercepts LLM API calls from any process, logs prompts, responses, tokens, and cost — with zero code changes.",
+	) + fmt.Sprintf("\n\nRun %s to get started.", tui.RenderText(tui.Hint, "'promtrace setup'")),
+)
 
 var rootCmd = &cobra.Command{
 	Use:  "promtrace",

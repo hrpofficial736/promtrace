@@ -9,11 +9,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var showLongText string = tui.BoxWrapper(
+	tui.RenderCommandDescription(
+		"show",
+		"This command displays the full details of an intercepted trace including model, prompts, response, cost, tokens, and latency.",
+	),
+)
 var showCommand *cobra.Command = &cobra.Command{
-	Use:   "show",
-	Short: "used to see a specific trace",
-	Long:  "used to see a specific trace",
-	RunE:  showRun,
+	Use:                   "show <TRACE_ID>",
+	Example:               "  promtrace show a3f7b2c1",
+	Short:                 "Display details of a specific trace",
+	DisableFlagsInUseLine: true,
+	Long:                  showLongText,
+	RunE:                  showRun,
 }
 
 func showRun(cmd *cobra.Command, args []string) error {

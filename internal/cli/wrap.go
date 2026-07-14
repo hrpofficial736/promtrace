@@ -14,16 +14,26 @@ import (
 	"time"
 )
 
+var wrapLongText string = tui.BoxWrapper(
+	tui.RenderCommandDescription(
+		"wrap",
+		"This command wraps a sub-process and starts intercepting all of the HTTP requests made by that sub-process.",
+	),
+)
+
 var wrapCommand *cobra.Command = &cobra.Command{
-	Use:   "wrap",
-	Short: "wrap a subprocess and intercept its LLM API calls!",
-	Args:  cobra.MinimumNArgs(1),
+	Use:                   "wrap <PROCESS_COMMAND>",
+	Example:               "  promtrace wrap python script.py",
+	Short:                 "wrap a subprocess and intercept its LLM API calls!",
+	Long:                  wrapLongText,
+	Args:                  cobra.MinimumNArgs(1),
+	DisableFlagsInUseLine: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return wrapRun(cmd, args)
 	},
 }
 
-func wrapRun(cmd *cobra.Command, args []string) error {
+func wrapRun(_ *cobra.Command, args []string) error {
 	cfg, err := config.Load()
 	if err != nil {
 		logger.Log.Error("error while loading config", "error", err)

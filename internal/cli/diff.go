@@ -10,12 +10,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var diffLongText string = tui.BoxWrapper(
+	tui.RenderCommandDescription(
+		"diff",
+		"This command compares two traces by their system prompts, user prompts, cost, tokens and latency(ms).",
+	),
+)
 var diffCommand *cobra.Command = &cobra.Command{
-	Use:   "diff",
-	Short: "used to comapare two traces",
-	Long:  "used to compare two traces",
-	Args:  cobra.ExactArgs(2),
-	RunE:  diffRun,
+	Use:                   "diff <TRACE_1_ID> <TRACE_2_ID>",
+	Example:               "  promtrace diff a3f7b2c1 b8c4d1e2",
+	Short:                 "Compare two traces side by side",
+	Long:                  diffLongText,
+	DisableFlagsInUseLine: true,
+	Args:                  cobra.ExactArgs(2),
+	RunE:                  diffRun,
 }
 
 func diffRun(cmd *cobra.Command, args []string) error {

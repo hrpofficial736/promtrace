@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/lipgloss"
 	ltable "github.com/charmbracelet/lipgloss/table"
 )
@@ -49,7 +51,8 @@ func RenderTable(cols []string, rows [][]string) string {
 }
 
 func RenderCommandDescription(cmdName, description string) string {
-	return RenderText(Heading, cmdName) + "\n" + RenderText(Body, description)
+	header := RenderText(Heading, fmt.Sprintf("'%s'", cmdName)) + RenderText(Body, " command")
+	return header + "\n-----------------\n" + RenderText(Body, description)
 }
 
 func BoxWrapper(content string) string {

@@ -2,7 +2,6 @@ package cli
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/hrpofficial736/promtrace/internal/config"
 	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/store"
@@ -11,11 +10,19 @@ import (
 	"os"
 )
 
+var exportLongText string = tui.BoxWrapper(
+	tui.RenderCommandDescription(
+		"export",
+		"This command dumps all the traces to the standard output in JSONL format by default.",
+	),
+)
 var exportCommand *cobra.Command = &cobra.Command{
-	Use:   "export",
-	Short: "used to dump traces in std out",
-	Long:  "used to dump traces in std out",
-	RunE:  exportRun,
+	Use:                   "export",
+	Example:               "  promtrace export --format jsonl > traces.jsonl",
+	Short:                 "Export all traces as newline-delimited JSON",
+	DisableFlagsInUseLine: true,
+	Long:                  exportLongText,
+	RunE:                  exportRun,
 }
 
 func exportRun(cmd *cobra.Command, args []string) error {
@@ -47,14 +54,12 @@ func exportRun(cmd *cobra.Command, args []string) error {
 		encoder.Encode(t)
 	}
 
-	fmt.Println(tui.RenderStatus(true, "Successfully exported traces"))
-
 	return nil
 }
 
 var exportFormatFlag string
 
 func init() {
-	exportCommand.Flags().StringVar(&exportFormatFlag, "format", "jsonl", "output format(jsonl)")
+	exportCommand.Flags().StringVar(&exportFormatFlag, "format", "jsonl", "output format (jsonl)")
 	rootCmd.AddCommand(exportCommand)
 }

@@ -9,11 +9,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var setupLongText string = tui.RenderCommandDescription("setup", "This command generates root CA and installs it in the OS trust store.")
+var setupLongText string = tui.BoxWrapper(
+	tui.RenderCommandDescription(
+		"setup",
+		"This command generates root CA and installs it in the OS's trust store.",
+	),
+)
 
 var setupCommand *cobra.Command = &cobra.Command{
 	Use:                   "setup",
-	Short:                 "setup tls",
+	Short:                 "This command sets up promtrace for TLS interception.",
 	Long:                  setupLongText,
 	DisableFlagsInUseLine: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
