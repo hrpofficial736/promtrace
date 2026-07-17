@@ -42,7 +42,7 @@ func sessionsRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Println(tui.RenderSessions(sessions))
+	fmt.Print(tui.RenderSessions(sessions))
 
 	return nil
 }

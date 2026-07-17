@@ -9,45 +9,32 @@ import (
 )
 
 func RenderTraceInfoContainer(t *store.Trace) string {
-	titleText := RenderText(Heading, util.GetPromtraceHeadingAsciiText()+"\nTrace Information: "+t.ID+"\n")
+
+	heading := RenderText(Heading, "TRACE INFORMATION")
 
 	basicInfo := RenderText(Hint, fmt.Sprintf(`
- Call: %s
- Model: %s
- Time: %s
- Latency: %sms
- Tokens: %s
- Cost: %s
+ID: %s
+Model: %s
+Time: %s
+Latency: %sms
+Tokens: %s
+Cost: %s
 	`,
 		t.ID,
 		t.Model,
 		t.Timestamp.Format("Jan 02 15:04:02"),
 		strconv.Itoa(int(t.LatencyMs)),
 		strconv.Itoa(t.Tokens),
-		fmt.Sprintf("$%.4f", float64(t.Cost)/10000),
+		util.FmtCost(t.Cost),
 	))
 
-	systemPrompt := BoxStyle.Render(
-		RenderText(Hint, "System Prompt") + "\n" + t.SystemPrompt,
-	)
+	systemPrompt := RenderText(Heading, "System Prompt") + "\n" + t.SystemPrompt + "\n"
 
-	userPrompt := BoxStyle.Render(
-		RenderText(Hint, "User Prompt") + "\n" + t.UserPrompt,
-	)
+	userPrompt := RenderText(Heading, "User Prompt") + "\n" + t.UserPrompt + "\n"
 
-	responseText := BoxStyle.Render(
-		RenderText(Hint, "Response") + "\n" + t.Response,
-	)
+	responseText := RenderText(Heading, "Response") + "\n" + t.Response
 
-	tb := lipgloss.NewStyle().
-		Border(lipgloss.NormalBorder()).
-		BorderForeground(ColorTertiary).
-		Bold(true).
-		Padding(0, 1)
+	container := lipgloss.JoinVertical(lipgloss.Left, heading, basicInfo, systemPrompt, userPrompt, responseText)
 
-	container := lipgloss.JoinVertical(lipgloss.Left, basicInfo, systemPrompt, userPrompt, responseText)
-
-	window := lipgloss.JoinVertical(lipgloss.Left, titleText, tb.Render(container))
-
-	return lipgloss.NewStyle().Render(window)
+	return BoxStyle.Width(100).Border(lipgloss.ASCIIBorder()).Padding(0, 1).Render(container)
 }

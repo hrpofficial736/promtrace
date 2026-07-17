@@ -3,6 +3,7 @@ package util
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -40,4 +41,8 @@ func GetPromtraceHeadingAsciiText() string {
 ██║     ██║  ██║╚██████╔╝██║ ╚═╝ ██║   ██║   ██║  ██║██║  ██║╚██████╗███████╗
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝
 `
+}
+
+func FmtCost(cost int) string {
+	return fmt.Sprintf("$%.4f", float64(cost)/10000)
 }

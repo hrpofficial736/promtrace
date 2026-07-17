@@ -230,8 +230,6 @@ func (s *sqliteStore) ListSessions() ([]*Session, error) {
 			return nil, err
 		}
 
-		logger.Log.Info(s_at_string)
-
 		session.StartedAt, err = time.Parse(sqliteLayout, s_at_string)
 
 		if err != nil {

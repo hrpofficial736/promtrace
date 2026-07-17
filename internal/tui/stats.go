@@ -16,15 +16,15 @@ func RenderStats(stats *store.Stats) string {
 Total Calls: %s
 Total Tokens: %s
 Total Cost: %s
-Avg Latency: %s
-	`, strconv.Itoa(stats.TotalCalls), strconv.Itoa(stats.TotalTokens), fmt.Sprintf("%.4f", float64(stats.TotalCost)), strconv.Itoa(stats.AvgLatency)))
+Avg Latency: %sms
+	`, strconv.Itoa(stats.TotalCalls), strconv.Itoa(stats.TotalTokens), util.FmtCost(stats.TotalCost), strconv.Itoa(stats.AvgLatency)))
 
 	cols := []string{"DATE", "CALLS", "TOKENS", "COST", "AVG LATENCY"}
 
 	var rows [][]string
 
 	for _, t := range stats.Trend {
-		row := []string{t.Date.Format("2006-01-02"), strconv.Itoa(t.Calls), strconv.Itoa(t.Tokens), strconv.Itoa(t.Cost), strconv.Itoa(t.AvgLatency)}
+		row := []string{t.Date.Format("2006-01-02"), strconv.Itoa(t.Calls), strconv.Itoa(t.Tokens), strconv.Itoa(t.Cost), strconv.Itoa(t.AvgLatency) + "ms"}
 
 		rows = append(rows, row)
 	}

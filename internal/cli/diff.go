@@ -59,7 +59,7 @@ func diffRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Println(tui.RenderDiff(result))
+	fmt.Print(tui.RenderDiff(result))
 
 	return nil
 }

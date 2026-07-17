@@ -20,6 +20,7 @@ var showCommand *cobra.Command = &cobra.Command{
 	Example:               "  promtrace show a3f7b2c1",
 	Short:                 "Display details of a specific trace",
 	DisableFlagsInUseLine: true,
+	Args:                  cobra.ExactArgs(1),
 	Long:                  showLongText,
 	RunE:                  showRun,
 }
@@ -44,7 +45,7 @@ func showRun(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	fmt.Println(tui.RenderTraceInfoContainer(trace))
+	fmt.Print(tui.RenderTraceInfoContainer(trace))
 
 	return nil
 }

@@ -43,7 +43,7 @@ func RenderTable(cols []string, rows [][]string) string {
 
 	t := ltable.New().
 		Border(lipgloss.NormalBorder()).
-		BorderStyle(lipgloss.NewStyle().Foreground(ColorTertiary)).
+		BorderStyle(lipgloss.NewStyle().Foreground(ColorSecondary)).
 		Headers(cols...).
 		Rows(rows...)
 

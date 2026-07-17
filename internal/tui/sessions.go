@@ -1,16 +1,14 @@
 package tui
 
 import (
-	"fmt"
-	"strconv"
-
 	"github.com/charmbracelet/lipgloss"
 	"github.com/hrpofficial736/promtrace/internal/store"
 	"github.com/hrpofficial736/promtrace/internal/util"
+	"strconv"
 )
 
 func RenderSessions(sessions []*store.Session) string {
-	titleText := RenderText(Heading, util.GetPromtraceHeadingAsciiText()+"\nSessions: ")
+	titleText := RenderText(Heading, "SESSIONS: ")
 
 	cols := []string{"SESSION ID", "CALLS", "STARTED AT", "AVG LATENCY", "TOKENS", "COST"}
 	var rows [][]string
@@ -22,7 +20,7 @@ func RenderSessions(sessions []*store.Session) string {
 			s.StartedAt.Format("Jan 02 15:04:05"),
 			strconv.Itoa(s.AvgLatency) + "ms",
 			strconv.Itoa(s.TotalTokens),
-			fmt.Sprintf("%.4f", float64(s.TotalCost)/10000),
+			util.FmtCost(s.TotalCost),
 		}
 
 		rows = append(rows, row)
@@ -30,5 +28,5 @@ func RenderSessions(sessions []*store.Session) string {
 
 	table := RenderTable(cols, rows)
 
-	return lipgloss.NewStyle().Padding(0, 1).Render(lipgloss.JoinVertical(lipgloss.Left, titleText, table))
+	return BoxStyle.Border(lipgloss.ASCIIBorder()).Render(lipgloss.JoinVertical(lipgloss.Left, titleText, table))
 }

@@ -90,17 +90,18 @@ func (m WatchModel) View() string {
 	for _, t := range m.traces {
 		rows = append(rows, []string{
 			t.Timestamp.Format("Jan 02 15:04:05"),
+			t.ID,
 			t.Model,
-			strconv.Itoa(int(t.LatencyMs)),
+			strconv.Itoa(int(t.LatencyMs)) + "ms",
 			strconv.Itoa(t.Tokens),
-			strconv.Itoa(t.Cost),
+			util.FmtCost(t.Cost),
 		})
 	}
 
 	t := ltable.New().
 		Border(lipgloss.NormalBorder()).
 		BorderStyle(lipgloss.NewStyle().Foreground(ColorTertiary)).
-		Headers("TIME", "MODEL", "LATENCY", "TOKENS", "COST").
+		Headers("TIME", "ID", "MODEL", "LATENCY", "TOKENS", "COST").
 		Rows(rows...).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			if row == -1 {

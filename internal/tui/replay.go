@@ -2,8 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"strconv"
-
 	"github.com/charmbracelet/lipgloss"
 	"github.com/hrpofficial736/promtrace/internal/util"
 )
@@ -19,14 +17,15 @@ func RenderReplay(r1, r2 *ReplayComparisonResponseStruct) string {
 
 	titleText := RenderText(Heading, util.GetPromtraceHeadingAsciiText()+"\nReplay Comparison: ")
 
-	modelsText := fmt.Sprintf(`
-	%s:  %sms, $%s, %s chars response
-	%s: %sms, $%s, %s chars response
-`,
-		r1.Model, strconv.Itoa(r1.Latency), strconv.Itoa(r1.Cost), strconv.Itoa(r1.ResponseLength),
-		r2.Model, strconv.Itoa(r2.Latency), strconv.Itoa(r2.Cost), strconv.Itoa(r2.ResponseLength),
-	)
+	cols := []string{"", "MODEL", "LATENCY", "COST", "RESPONSE"}
 
-	return lipgloss.NewStyle().Padding(0, 1).Render(lipgloss.JoinVertical(lipgloss.Left, titleText, modelsText))
+	rows := [][]string{
+		{"original", r1.Model, fmt.Sprintf("%dms", r1.Latency), util.FmtCost(r1.Cost), fmt.Sprintf("%d chars", r1.ResponseLength)},
+		{"replayed", r2.Model, fmt.Sprintf("%dms", r2.Latency), util.FmtCost(r2.Cost), fmt.Sprintf("%d chars", r2.ResponseLength)},
+	}
+
+	table := RenderTable(cols, rows)
+
+	return lipgloss.NewStyle().Padding(0, 1).Render(lipgloss.JoinVertical(lipgloss.Left, titleText, table))
 
 }
