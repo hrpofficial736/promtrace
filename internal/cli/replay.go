@@ -2,6 +2,9 @@ package cli
 
 import (
 	"fmt"
+	"io"
+	"time"
+
 	"github.com/hrpofficial736/promtrace/internal/config"
 	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/provider"
@@ -9,9 +12,8 @@ import (
 	"github.com/hrpofficial736/promtrace/internal/store"
 	"github.com/hrpofficial736/promtrace/internal/tui"
 	"github.com/hrpofficial736/promtrace/internal/util"
+	"github.com/hrpofficial736/promtrace/pkg/costable"
 	"github.com/spf13/cobra"
-	"io"
-	"time"
 )
 
 var replayLongText string = tui.BoxWrapper(
@@ -78,6 +80,8 @@ func replayRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	latency := time.Since(start).Milliseconds()
+
 	newTrace := *t
 
 	newTrace.ID = util.GenerateID()
@@ -94,11 +98,13 @@ func replayRun(cmd *cobra.Command, args []string) error {
 
 	newTrace.StatusCode = res.StatusCode
 
-	newTrace.LatencyMs = time.Since(start).Milliseconds()
+	newTrace.LatencyMs = latency
 
 	if replayModelFlag != "" {
 		newTrace.Model = replayModelFlag
 	}
+
+	newTrace.Cost = costable.CalculateCost(newTrace.Model, inTokens, outTokens)
 
 	err = st.SaveTrace(&newTrace)
 

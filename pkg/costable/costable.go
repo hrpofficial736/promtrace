@@ -23,6 +23,12 @@ func init() {
 	yaml.Unmarshal(pricingFile, &data)
 }
 
+func ValidateModel(model string) bool {
+	_, ok := data.Models[model]
+
+	return ok
+}
+
 func CalculateCost(model string, inputTokens, outputTokens int) float64 {
 
 	modelPricing, ok := data.Models[model]

@@ -13,7 +13,7 @@ type Trace struct {
 	Path         string
 	Model        string
 	Tokens       int
-	Cost         int
+	Cost         float64
 	SystemPrompt string
 	UserPrompt   string
 	RequestBody  string
@@ -27,7 +27,7 @@ type Session struct {
 	ID          string
 	TotalCalls  int
 	StartedAt   time.Time
-	TotalCost   int
+	TotalCost   float64
 	AvgLatency  int
 	TotalTokens int
 }
@@ -36,14 +36,14 @@ type trendData struct {
 	Date       time.Time
 	Calls      int
 	Tokens     int
-	Cost       int
-	AvgLatency int
+	Cost       float64
+	AvgLatency float64
 }
 
 type Stats struct {
 	TotalCalls  int
 	TotalTokens int
-	TotalCost   int
-	AvgLatency  int
+	TotalCost   float64
+	AvgLatency  float64
 	Trend       []*trendData
 }

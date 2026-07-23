@@ -1,14 +1,16 @@
 package tui
 
 import (
+	"strconv"
+	"strings"
+	"time"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	ltable "github.com/charmbracelet/lipgloss/table"
 	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/store"
 	"github.com/hrpofficial736/promtrace/internal/util"
-	"strconv"
-	"time"
 )
 
 type WatchModel struct {
@@ -19,12 +21,10 @@ type WatchModel struct {
 }
 
 func NewWatchModel(s store.Store, l int) WatchModel {
-	m := WatchModel{
+	return WatchModel{
 		store: s,
 		limit: l,
 	}
-
-	return m
 }
 
 type tickMsg time.Time
@@ -68,66 +68,74 @@ func (m WatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case tickMsg:
 		return m, tea.Batch(m.fetchTraces(), tickEvery())
-
 	case tracesMsg:
 		m.traces = msg
 		if m.cursor >= len(m.traces) {
 			m.cursor = max(0, len(m.traces)-1)
 		}
 	}
-
 	return m, nil
 }
 
 func (m WatchModel) View() string {
+	const width = 80
 
-	// title section
+	// ── Header ───────────────────────────────────────────────────────────────
+	left := TitleStyle.Render("promtrace") + MutedStyle.Render(" live traces")
+	right := HintStyle.Render("auto-refresh 1s")
+	gap := strings.Repeat(" ", max(0, width-lipgloss.Width(left)-lipgloss.Width(right)))
+	header := left + gap + right
 
-	title := RenderText(Heading, util.GetPromtraceHeadingAsciiText()+"\n") + RenderText(Hint, "\n 🌏 Live Traces ")
+	divider := lipgloss.NewStyle().Foreground(ColorBorder).Render(strings.Repeat("─", width))
 
-	var rows [][]string
+	// ── Body ─────────────────────────────────────────────────────────────────
+	var body string
 
-	for _, t := range m.traces {
-		rows = append(rows, []string{
-			t.Timestamp.Format("Jan 02 15:04:05"),
-			t.ID,
-			t.Model,
-			strconv.Itoa(int(t.LatencyMs)) + "ms",
-			strconv.Itoa(t.Tokens),
-			util.FmtCost(t.Cost),
-		})
+	if len(m.traces) == 0 {
+		body = lipgloss.NewStyle().
+			Width(width).
+			Align(lipgloss.Center).
+			Padding(2, 0).
+			Render(MutedStyle.Render("waiting for traces…"))
+	} else {
+		var rows [][]string
+		for _, t := range m.traces {
+			rows = append(rows, []string{
+				t.Timestamp.Format("15:04:05"),
+				t.ID,
+				t.Model,
+				strconv.Itoa(int(t.LatencyMs)) + "ms",
+				strconv.Itoa(t.Tokens),
+				util.FmtCost(t.Cost),
+			})
+		}
+
+		cursor := m.cursor
+		t := ltable.New().
+			Border(lipgloss.RoundedBorder()).
+			BorderStyle(lipgloss.NewStyle().Foreground(ColorBorder)).
+			Headers("TIME", "ID", "MODEL", "LATENCY", "TOKENS", "COST").
+			Rows(rows...).
+			StyleFunc(func(row, col int) lipgloss.Style {
+				switch {
+				case row == ltable.HeaderRow:
+					return TableHeaderStyle.
+						Padding(0, 2).
+						Align(lipgloss.Center)
+				case row == cursor:
+					return SelectedRowStyle.Padding(0, 2)
+				case row%2 == 0:
+					return TableRowStyle.Padding(0, 2)
+				default:
+					return TableRowAltStyle.Padding(0, 2)
+				}
+			})
+
+		body = t.Render()
 	}
 
-	t := ltable.New().
-		Border(lipgloss.NormalBorder()).
-		BorderStyle(lipgloss.NewStyle().Foreground(ColorTertiary)).
-		Headers("TIME", "ID", "MODEL", "LATENCY", "TOKENS", "COST").
-		Rows(rows...).
-		StyleFunc(func(row, col int) lipgloss.Style {
-			if row == -1 {
-				return lipgloss.NewStyle().
-					Foreground(ColorSelected).
-					Align(lipgloss.Center, lipgloss.Center).
-					Bold(true).
-					Padding(0, 2)
-			}
+	// ── Footer ────────────────────────────────────────────────────────────────
+	footer := HintStyle.Render("↑/↓ navigate   q quit")
 
-			if row == m.cursor {
-				return lipgloss.NewStyle().
-					Foreground(ColorPrimary).
-					Background(ColorSelected).
-					Align(lipgloss.Center, lipgloss.Center).
-					Bold(true).
-					Padding()
-			}
-			return lipgloss.NewStyle().
-				Foreground(ColorSecondary).
-				Align(lipgloss.Center, lipgloss.Center).
-				Padding()
-		})
-
-	help := RenderText(Hint, "\n press ↑/↓ to navigate and q to quit\n")
-
-	return lipgloss.JoinVertical(lipgloss.Left, title, t.Render(), help)
-
+	return lipgloss.JoinVertical(lipgloss.Left, header, divider, body, footer)
 }

@@ -2,93 +2,107 @@ package tui
 
 import (
 	"fmt"
+
 	"github.com/charmbracelet/lipgloss"
 	"github.com/hrpofficial736/promtrace/internal/diff"
 	"github.com/hrpofficial736/promtrace/internal/util"
 )
 
-func RenderDiff(diff *diff.DiffResponseModel) string {
+func RenderDiff(d *diff.DiffResponseModel) string {
+	title := HeadingStyle.Render("DIFF COMPARISON")
 
-	titleText := RenderText(Heading, "TRACES DIFF\n")
-
-	areSysPromptsIdentical := diff.SystemPrompt.Identical
-
-	var sysPromptText string
-
-	if areSysPromptsIdentical {
-		sysPromptText = "identical"
+	// ── System Prompt section ────────────────────────────────────────────────
+	var sysPromptContent string
+	if d.SystemPrompt.Identical {
+		sysPromptContent = MutedStyle.Render("identical")
 	} else {
-		sysPromptText = fmt.Sprintf(
-			"%s\n%s\n",
-			RemovedStyle.Render("\n- "+diff.SystemPrompt.Old),
-			AddedStyle.Render("+ "+diff.SystemPrompt.New),
+		sysPromptContent = lipgloss.JoinVertical(
+			lipgloss.Left,
+			RemovedStyle.Render("− "+d.SystemPrompt.Old),
+			AddedStyle.Render("+ "+d.SystemPrompt.New),
 		)
 	}
+	systemPromptSection := RenderSection("System Prompt", sysPromptContent)
 
-	areUserPromptsIdentical := diff.UserPrompt.Identical
-
-	var userPromptText string
-
-	if areUserPromptsIdentical {
-		userPromptText = "identical"
+	// ── User Prompt section ──────────────────────────────────────────────────
+	var userPromptContent string
+	if d.UserPrompt.Identical {
+		userPromptContent = MutedStyle.Render("identical")
 	} else {
-		userPromptText = fmt.Sprintf(
-			"%s\n%s\n",
-			RemovedStyle.Render("\n- "+diff.UserPrompt.Old),
-			AddedStyle.Render("+ "+diff.UserPrompt.New),
+		userPromptContent = lipgloss.JoinVertical(
+			lipgloss.Left,
+			RemovedStyle.Render("− "+d.UserPrompt.Old),
+			AddedStyle.Render("+ "+d.UserPrompt.New),
 		)
 	}
+	userPromptSection := RenderSection("User Prompt", userPromptContent)
 
-	respSign := "+"
-
-	if diff.ResponseLength.Delta < 0 {
-		respSign = ""
+	// ── Metrics section ──────────────────────────────────────────────────────
+	// Response length
+	respDelta := d.ResponseLength.Delta
+	respDeltaStr := fmt.Sprintf("%+d", respDelta)
+	var respDeltaStyled string
+	if respDelta > 0 {
+		respDeltaStyled = SuccessStyle.Render(respDeltaStr)
+	} else if respDelta < 0 {
+		respDeltaStyled = ErrorStyle.Render(respDeltaStr)
+	} else {
+		respDeltaStyled = MutedStyle.Render(respDeltaStr)
 	}
+	responseLengthLine := BodyStyle.Render(fmt.Sprintf(
+		"Response Length  %d chars → %d chars  ",
+		d.ResponseLength.A, d.ResponseLength.B,
+	)) + respDeltaStyled
 
-	responseLengthText := fmt.Sprintf(
-		"response length: %d chars -> %d chars (%s%d)",
-		diff.ResponseLength.A,
-		diff.ResponseLength.B,
-		respSign,
-		diff.ResponseLength.Delta,
-	)
-
-	costSign := "+"
-
-	if diff.Cost.Delta < 0 {
-		costSign = ""
+	// Cost
+	costDelta := d.Cost.Delta
+	costDeltaStr := fmt.Sprintf("%+.6f", costDelta)
+	var costDeltaStyled string
+	if costDelta > 0 {
+		costDeltaStyled = SuccessStyle.Render(costDeltaStr)
+	} else if costDelta < 0 {
+		costDeltaStyled = ErrorStyle.Render(costDeltaStr)
+	} else {
+		costDeltaStyled = MutedStyle.Render(costDeltaStr)
 	}
+	costLine := BodyStyle.Render(fmt.Sprintf(
+		"Cost             %s → %s  ",
+		util.FmtCost(d.Cost.A), util.FmtCost(d.Cost.B),
+	)) + costDeltaStyled
 
-	costText := fmt.Sprintf(
-		"cost: %s -> %s (%s%d%%)",
-		util.FmtCost(diff.Cost.A),
-		util.FmtCost(diff.Cost.B),
-		costSign,
-		diff.Cost.Delta,
-	)
-
-	latencySign := "+"
-
-	if diff.Latency.Delta < 0 {
-		latencySign = ""
+	// Latency
+	latencyPct := d.Latency.PctChange
+	latencyPctStr := fmt.Sprintf("%+.2f%%", latencyPct)
+	var latencyPctStyled string
+	if latencyPct > 0 {
+		latencyPctStyled = SuccessStyle.Render(latencyPctStr)
+	} else if latencyPct < 0 {
+		latencyPctStyled = ErrorStyle.Render(latencyPctStr)
+	} else {
+		latencyPctStyled = MutedStyle.Render(latencyPctStr)
 	}
+	latencyLine := BodyStyle.Render(fmt.Sprintf(
+		"Latency          %dms → %dms  ",
+		d.Latency.A, d.Latency.B,
+	)) + latencyPctStyled
 
-	latencyText := fmt.Sprintf(
-		"latency: %dms -> %dms (%s%d%%)",
-		diff.Latency.A,
-		diff.Latency.B,
-		latencySign,
-		diff.Latency.Delta,
+	metricsContent := lipgloss.JoinVertical(
+		lipgloss.Left,
+		responseLengthLine,
+		costLine,
+		latencyLine,
 	)
+	metricsSection := RenderSection("Metrics", metricsContent)
 
+	// ── Compose ──────────────────────────────────────────────────────────────
 	container := lipgloss.JoinVertical(
 		lipgloss.Left,
-		titleText,
-		"system prompt: "+sysPromptText,
-		"user prompt: "+userPromptText,
-		responseLengthText,
-		costText,
-		latencyText,
+		title,
+		"",
+		systemPromptSection,
+		userPromptSection,
+		metricsSection,
 	)
-	return BoxStyle.Border(lipgloss.ASCIIBorder()).Padding(0, 1).Render(container)
+
+	return lipgloss.NewStyle().Padding(1, 2).Render(container)
 }

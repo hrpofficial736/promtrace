@@ -2,10 +2,9 @@ package store
 
 import (
 	"database/sql"
-	"time"
-
 	"github.com/hrpofficial736/promtrace/internal/logger"
 	_ "github.com/mattn/go-sqlite3"
+	"time"
 )
 
 type Store interface {
@@ -38,7 +37,7 @@ func NewSQLiteStore(dbPath string) (Store, error) {
 		path          TEXT,
 		model		  TEXT,
 		tokens 		  INTEGER,
-		cost 		  INTEGER,
+		cost 		  REAL,
 		system_prompt TEXT,
 		user_prompt   TEXT,
 		request_body  TEXT,
@@ -59,7 +58,10 @@ func NewSQLiteStore(dbPath string) (Store, error) {
 
 func (s *sqliteStore) SaveTrace(trace *Trace) error {
 	_, err := s.db.Exec(
-		`INSERT INTO traces (id, session_id, timestamp, host, method, path, model, tokens, cost, system_prompt, user_prompt, request_body, response, status_code, latency_ms, created_at)
+		`INSERT INTO traces
+	 (id, session_id, timestamp, host, method, path, model,
+	 tokens, cost, system_prompt, user_prompt, request_body,
+	 response, status_code, latency_ms, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		trace.ID,
 		trace.SessionID,
@@ -249,9 +251,9 @@ func (s *sqliteStore) GetStats(since time.Duration) (*Stats, error) {
 	cutoff := time.Now().Add(-since)
 
 	err := s.db.QueryRow(`
-	SELECT COUNT(*), SUM(tokens),
-	SUM(cost), AVG(latency_ms) FROM traces
-	WHERE timestamp >= ?
+	SELECT COUNT(*), COALESCE(SUM(tokens), 0),
+    COALESCE(SUM(cost), 0), COALESCE(AVG(latency_ms), 0) FROM traces
+    WHERE timestamp >= ?
 	`, cutoff).Scan(&stats.TotalCalls, &stats.TotalTokens, &stats.TotalCost, &stats.AvgLatency)
 
 	if err != nil {
@@ -267,15 +269,23 @@ func (s *sqliteStore) GetStats(since time.Duration) (*Stats, error) {
 	`, cutoff)
 
 	if err != nil {
-		logger.Log.Error("error while fetching stats from db", "error", err)
+		logger.Log.Error("error while scanning trend from db", "error", err)
 		return nil, err
 	}
 
 	defer rows.Close()
 
 	for rows.Next() {
-		var t trendData
-		rows.Scan(&t.Date, &t.Calls, &t.Tokens, &t.Cost, &t.AvgLatency)
+		t := trendData{}
+		var day string
+		rows.Scan(&day, &t.Calls, &t.Tokens, &t.Cost, &t.AvgLatency)
+
+		t.Date, err = time.Parse("2006-01-02", day)
+
+		if err != nil {
+			logger.Log.Error("error while parsing date", "error", err)
+			return nil, err
+		}
 
 		stats.Trend = append(stats.Trend, &t)
 	}

@@ -3,12 +3,13 @@ package replay
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/hrpofficial736/promtrace/internal/logger"
-	"github.com/hrpofficial736/promtrace/internal/provider"
-	"github.com/hrpofficial736/promtrace/internal/store"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/hrpofficial736/promtrace/internal/logger"
+	"github.com/hrpofficial736/promtrace/internal/provider"
+	"github.com/hrpofficial736/promtrace/internal/store"
 )
 
 func ReplayRequest(trace *store.Trace, modelFlag string) (*http.Response, error) {
@@ -37,11 +38,20 @@ func ReplayRequest(trace *store.Trace, modelFlag string) (*http.Response, error)
 
 	url := "https://" + trace.Host + trace.Path
 
-	req, _ := http.NewRequest(trace.Method, url, bytes.NewReader(bodyBytes))
+	req, err := http.NewRequest(trace.Method, url, bytes.NewReader(bodyBytes))
+	if err != nil {
+		return nil, err
+	}
 
 	req.Header.Set("Content-Type", "application/json")
 
-	err := provider.SetAuth(req, trace.Host)
+	q := req.URL.Query()
+	q.Del("key")
+	req.URL.RawQuery = q.Encode()
+	req.Header.Del("Authorization")
+	req.Header.Del("x-api-key")
+
+	err = provider.SetAuth(req, trace.Host)
 
 	if err != nil {
 		logger.Log.Error("error while getting api key", "error", err)

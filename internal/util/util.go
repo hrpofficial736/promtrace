@@ -43,6 +43,6 @@ func GetPromtraceHeadingAsciiText() string {
 `
 }
 
-func FmtCost(cost int) string {
-	return fmt.Sprintf("$%.4f", float64(cost)/10000)
+func FmtCost(cost float64) string {
+	return fmt.Sprintf("$%.6f", cost)
 }

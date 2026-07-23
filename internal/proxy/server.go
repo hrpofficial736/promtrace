@@ -5,6 +5,12 @@ import (
 	"bytes"
 	"compress/gzip"
 	"crypto/tls"
+	"io"
+	"net"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/hrpofficial736/promtrace/internal/certmanager"
 	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/provider"
@@ -12,10 +18,6 @@ import (
 	"github.com/hrpofficial736/promtrace/internal/util"
 	"github.com/hrpofficial736/promtrace/pkg/costable"
 	"github.com/hrpofficial736/promtrace/pkg/tokenizer"
-	"io"
-	"net"
-	"net/http"
-	"time"
 )
 
 type ProxyServer struct {
@@ -50,7 +52,6 @@ func (ps *ProxyServer) handleRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
-	start := time.Now()
 	host, _, _ := net.SplitHostPort(r.Host)
 	// hijacking connection
 	hijacker, _ := w.(http.Hijacker)
@@ -103,6 +104,7 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 	// forwarding request to the real server
 	req.Write(upstreamConn)
 
+	start := time.Now()
 	// reading response from the real server
 	resp, err := http.ReadResponse(bufio.NewReader(upstreamConn), req)
 
@@ -118,6 +120,8 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	latency := time.Since(start).Milliseconds()
+
 	resp.Body.Close()
 
 	resp.Body = io.NopCloser(bytes.NewReader(respBody))
@@ -130,18 +134,24 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	latency := time.Since(start).Milliseconds()
-
 	ext := provider.GetExtractor(host)
+
+	if ext == nil {
+		logger.Log.Error("invalid host name", "host", host)
+		return
+	}
+
 	model, sysPrompt, userPrompt := ext.ExtractRequest(reqBody, req.URL.Path)
 	response, inTokens, outTokens := ext.ExtractResponse(respBody)
 
 	if inTokens == 0 && outTokens == 0 {
-		inTokens = tokenizer.EstimateTokens(string(reqBody))
+		inTokens = tokenizer.EstimateTokens(sysPrompt + userPrompt)
 		outTokens = tokenizer.EstimateTokens(response)
 	}
 
 	cost := costable.CalculateCost(model, inTokens, outTokens)
+
+	now := time.Now()
 
 	// saving the trace
 
@@ -149,20 +159,20 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 		&store.Trace{
 			ID:           util.GenerateID(),
 			SessionID:    ps.sessionID,
-			Timestamp:    time.Now(),
+			Timestamp:    now,
 			Host:         host,
 			Method:       req.Method,
-			Path:         req.URL.Path,
+			Path:         strings.Split(req.URL.Path, "?")[0],
 			Model:        model,
 			Tokens:       inTokens + outTokens,
-			Cost:         int(cost * 1000),
+			Cost:         cost,
 			SystemPrompt: sysPrompt,
 			UserPrompt:   userPrompt,
 			RequestBody:  string(reqBody),
 			Response:     response,
 			StatusCode:   resp.StatusCode,
 			LatencyMs:    latency,
-			CreatedAt:    time.Now(),
+			CreatedAt:    now,
 		},
 	)
 

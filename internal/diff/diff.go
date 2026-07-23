@@ -10,19 +10,19 @@ type StringDiffModel struct {
 	New       string
 }
 
-type NumericDiffModel struct {
-	A         int
-	B         int
-	Delta     int
+type NumericDiffModel[T any] struct {
+	A         T
+	B         T
+	Delta     T
 	PctChange float64
 }
 
 type DiffResponseModel struct {
 	SystemPrompt   *StringDiffModel
 	UserPrompt     *StringDiffModel
-	ResponseLength *NumericDiffModel
-	Cost           *NumericDiffModel
-	Latency        *NumericDiffModel
+	ResponseLength *NumericDiffModel[int]
+	Cost           *NumericDiffModel[float64]
+	Latency        *NumericDiffModel[int]
 }
 
 func diffStrings(s1, s2 string) *StringDiffModel {
@@ -37,9 +37,9 @@ func diffStrings(s1, s2 string) *StringDiffModel {
 	return response
 }
 
-func diffNumbers(a, b int) *NumericDiffModel {
+func diffNumbers[T int | float64](a, b T) *NumericDiffModel[T] {
 
-	response := &NumericDiffModel{A: a, B: b, Delta: b - a}
+	response := &NumericDiffModel[T]{A: a, B: b, Delta: b - a}
 
 	if a != 0 {
 		response.PctChange = (float64(b-a) / float64(a) * 100)

@@ -2,39 +2,50 @@ package tui
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/charmbracelet/lipgloss"
 	"github.com/hrpofficial736/promtrace/internal/store"
 	"github.com/hrpofficial736/promtrace/internal/util"
-	"strconv"
 )
 
 func RenderTraceInfoContainer(t *store.Trace) string {
+	// ── Header row: badge + trace ID ────────────────────────────────────────
+	badge := RenderBadge("TRACE", ColorAccent)
+	traceID := MutedStyle.Render(" " + t.ID)
+	header := lipgloss.JoinHorizontal(lipgloss.Center, badge, traceID)
 
-	heading := RenderText(Heading, "TRACE INFORMATION")
+	// ── Metric chips ─────────────────────────────────────────────────────────
+	modelChip := PanelStyle.Render(RenderKeyValue("Model", t.Model))
+	latencyChip := PanelStyle.Render(RenderKeyValue("Latency", fmt.Sprintf("%sms", strconv.FormatInt(t.LatencyMs, 10))))
+	tokensChip := PanelStyle.Render(RenderKeyValue("Tokens", strconv.Itoa(t.Tokens)))
+	costChip := PanelStyle.Render(RenderKeyValue("Cost", util.FmtCost(t.Cost)))
 
-	basicInfo := RenderText(Hint, fmt.Sprintf(`
-ID: %s
-Model: %s
-Time: %s
-Latency: %sms
-Tokens: %s
-Cost: %s
-	`,
-		t.ID,
-		t.Model,
-		t.Timestamp.Format("Jan 02 15:04:02"),
-		strconv.Itoa(int(t.LatencyMs)),
-		strconv.Itoa(t.Tokens),
-		util.FmtCost(t.Cost),
-	))
+	chips := lipgloss.JoinHorizontal(lipgloss.Top, modelChip, latencyChip, tokensChip, costChip)
 
-	systemPrompt := RenderText(Heading, "System Prompt") + "\n" + t.SystemPrompt + "\n"
+	// ── Content sections ─────────────────────────────────────────────────────
+	var systemPromptContent string
+	if t.SystemPrompt == "" {
+		systemPromptContent = MutedStyle.Render("none")
+	} else {
+		systemPromptContent = BodyStyle.Render(t.SystemPrompt)
+	}
 
-	userPrompt := RenderText(Heading, "User Prompt") + "\n" + t.UserPrompt + "\n"
+	systemPromptSection := RenderSection("System Prompt", systemPromptContent)
+	userPromptSection := RenderSection("User Prompt", BodyStyle.Render(t.UserPrompt))
+	responseSection := RenderSection("Response", BodyStyle.Render(t.Response))
 
-	responseText := RenderText(Heading, "Response") + "\n" + t.Response
+	// ── Compose everything ───────────────────────────────────────────────────
+	container := lipgloss.JoinVertical(
+		lipgloss.Left,
+		header,
+		"",
+		chips,
+		"",
+		systemPromptSection,
+		userPromptSection,
+		responseSection,
+	)
 
-	container := lipgloss.JoinVertical(lipgloss.Left, heading, basicInfo, systemPrompt, userPrompt, responseText)
-
-	return BoxStyle.Width(100).Border(lipgloss.ASCIIBorder()).Padding(0, 1).Render(container)
+	return lipgloss.NewStyle().Padding(1, 2).Render(container)
 }
