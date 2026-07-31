@@ -36,15 +36,15 @@ func statsRun(cmd *cobra.Command, args []string) error {
 	st, err := store.NewSQLiteStore(cfg.DBPath)
 
 	if err != nil {
-		logger.Log.Error("error while parsing duration", "error", err)
+		logger.Log.Error("error while creating store", "error", err)
 		return err
 	}
 
 	duration, err := util.ParseDuration(statsFormatFlag)
 
 	if err != nil {
-		logger.Log.Error("error while parsing duration", "error", err)
-		return err
+		fmt.Println(tui.RenderStatus(false, "please enter a valid duration (e.g., 7d, 2h, 40m, 50s)"))
+		return nil
 	}
 
 	stats, err := st.GetStats(duration)

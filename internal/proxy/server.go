@@ -25,6 +25,9 @@ type ProxyServer struct {
 	store     store.Store
 	addr      string
 	sessionID string
+
+	tlsConn      *tls.Conn
+	upstreamConn *tls.Conn
 }
 
 func NewServer(certMgr *certmanager.CertManager, store store.Store, addr, sessionID string) *ProxyServer {
@@ -75,6 +78,8 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ps.tlsConn = tlsConn
+
 	// reading decrypted HTTP request from the subprocess
 	reader := bufio.NewReader(tlsConn)
 	req, err := http.ReadRequest(reader)
@@ -101,6 +106,7 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 		logger.Log.Error("error while opening real connection with the actual server", "error", err)
 		return
 	}
+	ps.upstreamConn = upstreamConn
 	// forwarding request to the real server
 	req.Write(upstreamConn)
 
@@ -176,16 +182,18 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
-	// traces saved to the store
-
 	// forwarding the response back to the subprocess
 	resp.Write(tlsConn)
-
-	// closing both connections
-	upstreamConn.Close()
-	tlsConn.Close()
 }
 
 func (ps *ProxyServer) Shutdown() error {
+	if ps.tlsConn != nil {
+		ps.tlsConn.Close()
+	}
+
+	if ps.upstreamConn != nil {
+		ps.upstreamConn.Close()
+	}
+
 	return nil
 }

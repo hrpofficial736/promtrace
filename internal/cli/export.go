@@ -2,12 +2,14 @@ package cli
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
+
 	"github.com/hrpofficial736/promtrace/internal/config"
 	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/store"
 	"github.com/hrpofficial736/promtrace/internal/tui"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var exportLongText string = tui.BoxWrapper(
@@ -50,8 +52,22 @@ func exportRun(cmd *cobra.Command, args []string) error {
 
 	encoder := json.NewEncoder(os.Stdout)
 
-	for _, t := range traces {
-		encoder.Encode(t)
+	switch exportFormatFlag {
+	case "jsonl":
+		for _, t := range traces {
+			if err := encoder.Encode(t); err != nil {
+				encoder.Encode(t)
+			}
+		}
+
+	case "json":
+		encoder.SetIndent("", "    ")
+		return encoder.Encode(traces)
+
+	default:
+		errString := tui.RenderStatus(false, fmt.Sprintf("unsupported format %q (supported: jsonl, json)", exportFormatFlag))
+		fmt.Println(errString)
+		return nil
 	}
 
 	return nil
@@ -60,6 +76,6 @@ func exportRun(cmd *cobra.Command, args []string) error {
 var exportFormatFlag string
 
 func init() {
-	exportCommand.Flags().StringVar(&exportFormatFlag, "format", "jsonl", "output format (jsonl)")
+	exportCommand.Flags().StringVar(&exportFormatFlag, "format", "jsonl", "output format (jsonl, json)")
 	rootCmd.AddCommand(exportCommand)
 }

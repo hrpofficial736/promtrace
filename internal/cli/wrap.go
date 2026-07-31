@@ -81,12 +81,8 @@ func wrapRun(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Println(tui.RenderStatus(true, "executing child process..."))
-
 	err = child.Wait()
-
-	ps.Shutdown()
-	return nil
+	return ps.Shutdown()
 }
 
 func init() {

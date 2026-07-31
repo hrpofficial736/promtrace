@@ -2,22 +2,21 @@ package tui
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/charmbracelet/lipgloss"
 	ltable "github.com/charmbracelet/lipgloss/table"
+	"strings"
 )
 
 // TextType selects a pre-defined text style in RenderText.
 type TextType int
 
 const (
-	Title   TextType = iota
-	Heading TextType = iota
-	Label   TextType = iota
-	Body    TextType = iota
-	Muted   TextType = iota
-	Hint    TextType = iota
+	Title TextType = iota
+	Heading
+	Label
+	Body
+	Muted
+	Hint
 )
 
 // RenderText renders text using the named style.
@@ -56,6 +55,7 @@ func RenderTable(cols []string, rows [][]string) string {
 		})
 
 	return t.Render()
+
 }
 
 // RenderKeyValue renders a single label: value line.

@@ -28,7 +28,7 @@ type Session struct {
 	TotalCalls  int
 	StartedAt   time.Time
 	TotalCost   float64
-	AvgLatency  int
+	AvgLatency  float64
 	TotalTokens int
 }
 

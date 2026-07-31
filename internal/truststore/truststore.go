@@ -1,9 +1,3 @@
-// Portions of the trust-store installation logic in this file
-// were adapted from mkcert:
-// https://github.com/FiloSottile/mkcert
-//
-// mkcert is licensed under the BSD 3-Clause License.
-
 package truststore
 
 import (
@@ -50,21 +44,18 @@ func (d DarwinInstaller) Uninstall(certPath string) error {
 type LinuxInstaller struct{}
 
 func (l LinuxInstaller) Install(certPath string) error {
-	// Step 1: ensure the directory exists
 	cmd1 := exec.Command("sudo", "mkdir", "-p", "/usr/local/share/ca-certificates")
 	if err := cmd1.Run(); err != nil {
 		logger.Log.Error("error while executing mkdir command for installation", "error", err)
 		return err
 	}
 
-	// Step 2: copy the cert
 	cmd2 := exec.Command("sudo", "cp", certPath, "/usr/local/share/ca-certificates/promtrace-ca.crt")
 	if err := cmd2.Run(); err != nil {
 		logger.Log.Error("error while executing cp command for installation", "error", err)
 		return err
 	}
 
-	// Step 3: update-ca-certificates
 	cmd3 := exec.Command("sudo", "update-ca-trust")
 	return cmd3.Run()
 }
@@ -73,14 +64,14 @@ func (l LinuxInstaller) Uninstall(certPath string) error {
 	cmd := exec.Command(
 		"sudo",
 		"rm",
-		"/usr/local/share/ca-certificates/ca.crt",
+		"/usr/local/share/ca-certificates/promtrace-ca.crt",
 	)
 
 	if err := cmd.Run(); err != nil {
 		return err
 	}
 
-	return exec.Command("sudo", "update-ca-certificates").Run()
+	return exec.Command("sudo", "update-ca-trust").Run()
 }
 
 // truststore management for windows

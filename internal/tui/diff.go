@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-
 	"github.com/charmbracelet/lipgloss"
 	"github.com/hrpofficial736/promtrace/internal/diff"
 	"github.com/hrpofficial736/promtrace/internal/util"
@@ -42,9 +41,9 @@ func RenderDiff(d *diff.DiffResponseModel) string {
 	respDelta := d.ResponseLength.Delta
 	respDeltaStr := fmt.Sprintf("%+d", respDelta)
 	var respDeltaStyled string
-	if respDelta > 0 {
+	if respDelta < 0 {
 		respDeltaStyled = SuccessStyle.Render(respDeltaStr)
-	} else if respDelta < 0 {
+	} else if respDelta > 0 {
 		respDeltaStyled = ErrorStyle.Render(respDeltaStr)
 	} else {
 		respDeltaStyled = MutedStyle.Render(respDeltaStr)
@@ -58,9 +57,9 @@ func RenderDiff(d *diff.DiffResponseModel) string {
 	costDelta := d.Cost.Delta
 	costDeltaStr := fmt.Sprintf("%+.6f", costDelta)
 	var costDeltaStyled string
-	if costDelta > 0 {
+	if costDelta < 0 {
 		costDeltaStyled = SuccessStyle.Render(costDeltaStr)
-	} else if costDelta < 0 {
+	} else if costDelta > 0 {
 		costDeltaStyled = ErrorStyle.Render(costDeltaStr)
 	} else {
 		costDeltaStyled = MutedStyle.Render(costDeltaStr)
@@ -74,9 +73,9 @@ func RenderDiff(d *diff.DiffResponseModel) string {
 	latencyPct := d.Latency.PctChange
 	latencyPctStr := fmt.Sprintf("%+.2f%%", latencyPct)
 	var latencyPctStyled string
-	if latencyPct > 0 {
+	if latencyPct < 0 {
 		latencyPctStyled = SuccessStyle.Render(latencyPctStr)
-	} else if latencyPct < 0 {
+	} else if latencyPct > 0 {
 		latencyPctStyled = ErrorStyle.Render(latencyPctStr)
 	} else {
 		latencyPctStyled = MutedStyle.Render(latencyPctStr)

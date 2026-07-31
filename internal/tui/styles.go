@@ -98,7 +98,6 @@ var (
 	// TableRowAltStyle styles alternate table rows.
 	TableRowAltStyle = lipgloss.NewStyle().
 				Foreground(ColorPrimary).
-				Background(ColorHighlight).
 				Align(lipgloss.Center).
 				Padding(0, 2)
 

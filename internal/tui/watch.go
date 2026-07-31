@@ -18,6 +18,7 @@ type WatchModel struct {
 	cursor int
 	traces []*store.Trace
 	limit  int
+	info   string
 }
 
 func NewWatchModel(s store.Store, l int) WatchModel {
@@ -65,6 +66,19 @@ func (m WatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.cursor < len(m.traces)-1 {
 				m.cursor++
 			}
+		case "enter":
+			if len(m.traces) > 0 {
+				m.info = RenderTraceInfoContainer(m.traces[m.cursor]) +
+					lipgloss.NewStyle().
+						Padding(1, 1).
+						Render(
+							HintStyle.Render("press 'q' to quit and 'backspace' to go back to watch traces."),
+						)
+			}
+			return m, nil
+		case "backspace":
+			m.info = ""
+			return m, nil
 		}
 	case tickMsg:
 		return m, tea.Batch(m.fetchTraces(), tickEvery())
@@ -78,10 +92,13 @@ func (m WatchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m WatchModel) View() string {
+	if m.info != "" {
+		return m.info
+	}
 	const width = 80
 
 	// ── Header ───────────────────────────────────────────────────────────────
-	left := TitleStyle.Render("promtrace") + MutedStyle.Render(" live traces")
+	left := HeadingStyle.Render("WATCH YOUR TRACES HERE")
 	right := HintStyle.Render("auto-refresh 1s")
 	gap := strings.Repeat(" ", max(0, width-lipgloss.Width(left)-lipgloss.Width(right)))
 	header := left + gap + right
@@ -137,5 +154,11 @@ func (m WatchModel) View() string {
 	// ── Footer ────────────────────────────────────────────────────────────────
 	footer := HintStyle.Render("↑/↓ navigate   q quit")
 
-	return lipgloss.JoinVertical(lipgloss.Left, header, divider, body, footer)
+	container := lipgloss.NewStyle().
+		Padding(1, 1).
+		Render(
+			lipgloss.JoinVertical(lipgloss.Left, header, divider, body, footer),
+		)
+
+	return container
 }

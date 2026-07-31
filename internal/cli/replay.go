@@ -2,18 +2,16 @@ package cli
 
 import (
 	"fmt"
-	"io"
-	"time"
-
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/hrpofficial736/promtrace/internal/config"
 	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/provider"
-	"github.com/hrpofficial736/promtrace/internal/replay"
 	"github.com/hrpofficial736/promtrace/internal/store"
 	"github.com/hrpofficial736/promtrace/internal/tui"
 	"github.com/hrpofficial736/promtrace/internal/util"
 	"github.com/hrpofficial736/promtrace/pkg/costable"
 	"github.com/spf13/cobra"
+	"time"
 )
 
 var replayLongText string = tui.BoxWrapper(
@@ -64,21 +62,22 @@ func replayRun(cmd *cobra.Command, args []string) error {
 
 	start := time.Now()
 
-	res, err := replay.ReplayRequest(t, replayModelFlag)
+	m := tui.NewSpinnerModel(t, replayModelFlag)
 
+	result, err := tea.NewProgram(m).Run()
 	if err != nil {
-		logger.Log.Error("error while re-sending the request", "error", err)
+		logger.Log.Error("error while running the spinner model", "error", err)
 		return err
 	}
 
-	defer res.Body.Close()
+	finalModel := result.(tui.SpinnerModel)
 
-	resBytes, err := io.ReadAll(res.Body)
-
-	if err != nil {
-		logger.Log.Error("error reading response body", "error", err)
-		return err
+	if finalModel.Err != nil {
+		logger.Log.Error("error while re-sending the request", "error", finalModel.Err)
+		return finalModel.Err
 	}
+
+	resBytes := finalModel.Body
 
 	latency := time.Since(start).Milliseconds()
 
@@ -96,7 +95,7 @@ func replayRun(cmd *cobra.Command, args []string) error {
 
 	newTrace.Response = extractorRes
 
-	newTrace.StatusCode = res.StatusCode
+	newTrace.StatusCode = finalModel.Res.StatusCode
 
 	newTrace.LatencyMs = latency
 

@@ -24,7 +24,7 @@ func RenderSessions(sessions []*store.Session) string {
 			s.ID,
 			strconv.Itoa(s.TotalCalls),
 			s.StartedAt.Format("Jan 02 15:04:05"),
-			strconv.Itoa(s.AvgLatency) + "ms",
+			strconv.FormatFloat(s.AvgLatency, 'f', 2, 64) + "ms",
 			strconv.Itoa(s.TotalTokens),
 			util.FmtCost(s.TotalCost),
 		})

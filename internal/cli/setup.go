@@ -45,7 +45,7 @@ var setupCommand *cobra.Command = &cobra.Command{
 		cm.StoreRootCACertificateInSystemTrustStore()
 		// setup complete, promtrace is ready
 
-		fmt.Println(tui.RenderStatus(true, "Certificates setup is complete, promtrace is ready."))
+		fmt.Println(tui.RenderStatus(true, "promtrace is ready, get started by wrapping a sub-process."))
 		return nil
 	},
 }
