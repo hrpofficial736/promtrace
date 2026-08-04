@@ -2,9 +2,8 @@ package store
 
 import (
 	"database/sql"
-	"github.com/hrpofficial736/promtrace/internal/logger"
-	_ "github.com/mattn/go-sqlite3"
 	"time"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Store interface {
@@ -29,7 +28,7 @@ func NewSQLiteStore(dbPath string) (Store, error) {
 
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS traces (
-		id 			  TEXT	PRIMARY KEY, 
+		id 			  TEXT	PRIMARY KEY,
 		session_id 	  TEXT,
 		timestamp     DATETIME,
 		host          TEXT,
@@ -85,7 +84,7 @@ func (s *sqliteStore) SaveTrace(trace *Trace) error {
 }
 
 func (s *sqliteStore) GetTrace(id string) (*Trace, error) {
-	var trace *Trace = &Trace{}
+	trace := &Trace{}
 	row := s.db.QueryRow(`
 	SELECT * FROM traces WHERE id = ?
 	`, id)
@@ -110,7 +109,6 @@ func (s *sqliteStore) GetTrace(id string) (*Trace, error) {
 	)
 
 	if err != nil {
-		logger.Log.Error("error while scanning rows in getting traces", "error", err)
 		return nil, err
 	}
 
@@ -125,14 +123,18 @@ func (s *sqliteStore) ListTraces(limit int) ([]*Trace, error) {
 	`, limit)
 
 	if err != nil {
-		logger.Log.Error("error while getting all the traces in listing traces", "error", err)
 		return nil, err
 	}
 
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			return
+		}
+	}()
 
 	for rows.Next() {
-		var trace *Trace = &Trace{}
+		trace := &Trace{}
 		err := rows.Scan(
 			&trace.ID,
 			&trace.SessionID,
@@ -152,7 +154,7 @@ func (s *sqliteStore) ListTraces(limit int) ([]*Trace, error) {
 			&trace.CreatedAt,
 		)
 		if err != nil {
-			logger.Log.Error("error while scanning rows in listing traces", "error", err)
+			return nil, err
 		}
 		traces = append(traces, trace)
 	}
@@ -166,14 +168,18 @@ func (s *sqliteStore) ListAllTraces() ([]*Trace, error) {
 	rows, err := s.db.Query(`SELECT * FROM traces ORDER BY timestamp ASC`)
 
 	if err != nil {
-		logger.Log.Error("error while getting all the traces in listing traces", "error", err)
 		return nil, err
 	}
 
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			return
+		}
+	}()
 
 	for rows.Next() {
-		var trace *Trace = &Trace{}
+		trace := &Trace{}
 		err := rows.Scan(
 			&trace.ID,
 			&trace.SessionID,
@@ -193,7 +199,7 @@ func (s *sqliteStore) ListAllTraces() ([]*Trace, error) {
 			&trace.CreatedAt,
 		)
 		if err != nil {
-			logger.Log.Error("error while scanning rows in listing traces", "error", err)
+			return nil, err
 		}
 		traces = append(traces, trace)
 	}
@@ -213,14 +219,18 @@ func (s *sqliteStore) ListSessions() ([]*Session, error) {
 	`)
 
 	if err != nil {
-		logger.Log.Error("error while fetching sessions from DB", "error", err)
 		return nil, err
 	}
 
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			return
+		}
+	}()
 
 	for rows.Next() {
-		var session *Session = &Session{}
+		session := &Session{}
 
 		sqliteLayout := "2006-01-02 15:04:05.999999999-07:00"
 		var s_at_string string
@@ -228,14 +238,12 @@ func (s *sqliteStore) ListSessions() ([]*Session, error) {
 		err := rows.Scan(&session.ID, &session.TotalCalls, &s_at_string, &session.AvgLatency, &session.TotalTokens, &session.TotalCost)
 
 		if err != nil {
-			logger.Log.Error("error while scanning sessions from rows", "error", err)
 			return nil, err
 		}
 
 		session.StartedAt, err = time.Parse(sqliteLayout, s_at_string)
 
 		if err != nil {
-			logger.Log.Error("error while parsing string to time type", "error", err)
 			return nil, err
 		}
 
@@ -257,7 +265,6 @@ func (s *sqliteStore) GetStats(since time.Duration) (*Stats, error) {
 	`, cutoff).Scan(&stats.TotalCalls, &stats.TotalTokens, &stats.TotalCost, &stats.AvgLatency)
 
 	if err != nil {
-		logger.Log.Error("error while fetching stats from db", "error", err)
 		return nil, err
 	}
 
@@ -269,21 +276,27 @@ func (s *sqliteStore) GetStats(since time.Duration) (*Stats, error) {
 	`, cutoff)
 
 	if err != nil {
-		logger.Log.Error("error while scanning trend from db", "error", err)
 		return nil, err
 	}
 
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			return
+		}
+	}()
 
 	for rows.Next() {
 		t := trendData{}
 		var day string
-		rows.Scan(&day, &t.Calls, &t.Tokens, &t.Cost, &t.AvgLatency)
+		err := rows.Scan(&day, &t.Calls, &t.Tokens, &t.Cost, &t.AvgLatency)
+		if err != nil {
+			return nil, err
+		}
 
 		t.Date, err = time.Parse("2006-01-02", day)
 
 		if err != nil {
-			logger.Log.Error("error while parsing date", "error", err)
 			return nil, err
 		}
 

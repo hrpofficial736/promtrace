@@ -20,7 +20,10 @@ var pricingFile []byte
 var data PricingData
 
 func init() {
-	yaml.Unmarshal(pricingFile, &data)
+	err := yaml.Unmarshal(pricingFile, &data)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func ValidateModel(model string) bool {

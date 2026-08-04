@@ -2,16 +2,16 @@ package cli
 
 import (
 	"fmt"
+	"time"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/hrpofficial736/promtrace/internal/config"
-	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/provider"
 	"github.com/hrpofficial736/promtrace/internal/store"
 	"github.com/hrpofficial736/promtrace/internal/tui"
 	"github.com/hrpofficial736/promtrace/internal/util"
 	"github.com/hrpofficial736/promtrace/pkg/costable"
 	"github.com/spf13/cobra"
-	"time"
 )
 
 var replayLongText string = tui.BoxWrapper(
@@ -34,30 +34,32 @@ func replayRun(cmd *cobra.Command, args []string) error {
 	cfg, err := config.Load()
 
 	if err != nil {
-		logger.Log.Error("error while loading config", "error", err)
-		return err
+		errString := tui.RenderStatus(false, "could not load configuration. please run setup and try again.")
+		fmt.Println(errString)
+		return nil
 	}
 
 	st, err := store.NewSQLiteStore(cfg.DBPath)
 
 	if err != nil {
-		logger.Log.Error("error while making store", "error", err)
-		return err
+		errString := tui.RenderStatus(false, "could not open local trace store. please run setup and try again.")
+		fmt.Println(errString)
+		return nil
 	}
 
 	t, err := st.GetTrace(args[0])
 
 	if err != nil {
-		logger.Log.Error("error while getting trace", "error", err)
-		return err
+		fmt.Println(tui.RenderStatus(false, "trace not found. please check the trace ID and try again."))
+		return nil
 	}
 
 	if replayModelFlag != "" {
 		err = provider.ValidateModel(replayModelFlag, t.Host)
 		if err != nil {
-			return err
+			fmt.Println(tui.RenderStatus(false, "could not replay the request. the selected model is either unsupported or does not match the original provider family. please choose a compatible model and try again."))
+			return nil
 		}
-
 	}
 
 	start := time.Now()
@@ -66,15 +68,15 @@ func replayRun(cmd *cobra.Command, args []string) error {
 
 	result, err := tea.NewProgram(m).Run()
 	if err != nil {
-		logger.Log.Error("error while running the spinner model", "error", err)
-		return err
+		fmt.Println(tui.RenderStatus(false, "replay failed to start. please try again."))
+		return nil
 	}
 
 	finalModel := result.(tui.SpinnerModel)
 
 	if finalModel.Err != nil {
-		logger.Log.Error("error while re-sending the request", "error", finalModel.Err)
-		return finalModel.Err
+		fmt.Println(tui.RenderStatus(false, "could not replay the request. please try again."))
+		return nil
 	}
 
 	resBytes := finalModel.Body
@@ -108,8 +110,8 @@ func replayRun(cmd *cobra.Command, args []string) error {
 	err = st.SaveTrace(&newTrace)
 
 	if err != nil {
-		logger.Log.Error("error saving replay trace", "error", err)
-		return err
+		fmt.Println(tui.RenderStatus(false, "could not save replay result. please try again."))
+		return nil
 	}
 
 	r1 := &tui.ReplayComparisonResponseStruct{

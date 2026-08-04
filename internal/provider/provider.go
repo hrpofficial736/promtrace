@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-
 	"github.com/hrpofficial736/promtrace/pkg/costable"
 )
 

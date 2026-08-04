@@ -3,13 +3,11 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-
 	"github.com/hrpofficial736/promtrace/internal/config"
-	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/store"
 	"github.com/hrpofficial736/promtrace/internal/tui"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var exportLongText string = tui.BoxWrapper(
@@ -32,22 +30,25 @@ func exportRun(cmd *cobra.Command, args []string) error {
 	cfg, err := config.Load()
 
 	if err != nil {
-		logger.Log.Error("error while loading config", "error", err)
-		return err
+		errString := tui.RenderStatus(false, "could not load configuration. please run setup and try again.")
+		fmt.Println(errString)
+		return nil
 	}
 
 	st, err := store.NewSQLiteStore(cfg.DBPath)
 
 	if err != nil {
-		logger.Log.Error("error", "error in getting trace", err)
-		return err
+		errString := tui.RenderStatus(false, "error occured, please try again")
+		fmt.Println(errString)
+		return nil
 	}
 
 	traces, err := st.ListAllTraces()
 
 	if err != nil {
-		logger.Log.Error("error", "error in getting trace", err)
-		return err
+		errString := tui.RenderStatus(false, "error occured, please try again")
+		fmt.Println(errString)
+		return nil
 	}
 
 	encoder := json.NewEncoder(os.Stdout)
@@ -56,7 +57,12 @@ func exportRun(cmd *cobra.Command, args []string) error {
 	case "jsonl":
 		for _, t := range traces {
 			if err := encoder.Encode(t); err != nil {
-				encoder.Encode(t)
+				err := encoder.Encode(t)
+				if err != nil {
+					errString := tui.RenderStatus(false, "error occured, please try again")
+					fmt.Println(errString)
+					return nil
+				}
 			}
 		}
 

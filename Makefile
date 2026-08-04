@@ -11,4 +11,4 @@ clean:
 install:
 	go install ./cmd/promtrace
 dev:
-	go run ./cmd/promtrace wrap go run ./testdata/sample_app/main.go
+	go run ./cmd/promtrace wrap python test.py

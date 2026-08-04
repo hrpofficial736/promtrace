@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/hrpofficial736/promtrace/internal/logger"
 )
 
 type geminiRequest struct {
@@ -39,7 +38,6 @@ func (e *GeminiExtractor) ExtractRequest(body []byte, path string) (string, stri
 	var req *geminiRequest
 
 	if err := json.Unmarshal(body, &req); err != nil {
-		logger.Log.Error("error", "error in gemini extractor", err)
 		return "", "", ""
 	}
 
@@ -63,7 +61,6 @@ func (e *GeminiExtractor) ExtractResponse(body []byte) (string, int, int) {
 	var res *geminiResponse
 
 	if err := json.Unmarshal(body, &res); err != nil {
-		logger.Log.Error("error", "error in gemini response extractor", err)
 		return "", 0, 0
 	}
 

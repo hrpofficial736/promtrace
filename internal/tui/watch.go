@@ -8,7 +8,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	ltable "github.com/charmbracelet/lipgloss/table"
-	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/store"
 	"github.com/hrpofficial736/promtrace/internal/util"
 )
@@ -41,7 +40,6 @@ func (m WatchModel) fetchTraces() tea.Cmd {
 	return func() tea.Msg {
 		traces, err := m.store.ListTraces(m.limit)
 		if err != nil {
-			logger.Log.Error("error", "error", err)
 			return err
 		}
 		return tracesMsg(traces)

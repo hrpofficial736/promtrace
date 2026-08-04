@@ -2,9 +2,9 @@ package cli
 
 import (
 	"fmt"
+
 	"github.com/hrpofficial736/promtrace/internal/certmanager"
 	"github.com/hrpofficial736/promtrace/internal/config"
-	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/tui"
 	"github.com/spf13/cobra"
 )
@@ -18,28 +18,26 @@ var setupLongText string = tui.BoxWrapper(
 
 var setupCommand *cobra.Command = &cobra.Command{
 	Use:                   "setup",
-	Short:                 "This command sets up promtrace for TLS interception.",
+	Short:                 "Sets up promtrace for TLS interception.",
 	Long:                  setupLongText,
 	DisableFlagsInUseLine: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
 
 		if err != nil {
-			logger.Log.Error("error while loading config", "error", err)
-			fmt.Println(tui.RenderStatus(false, "Error generating certificates, please try again!"))
-			return err
+			errString := tui.RenderStatus(false, "could not load configuration. please try again.")
+			fmt.Println(errString)
+			return nil
 		}
 		cm, err := certmanager.NewCertManager(cfg)
 		if err != nil {
-			logger.Log.Info("error while generating cert manager")
-			fmt.Println(tui.RenderStatus(false, "Error generating certificates, please try again!"))
-			return err
+			fmt.Println(tui.RenderStatus(false, "could not initialize certificate manager. please try again."))
+			return nil
 		}
 
 		if err := cm.GenerateRootCACertificate(); err != nil {
-			logger.Log.Info("error while generating ca cert")
-			fmt.Println(tui.RenderStatus(false, "Error generating certificates, please try again!"))
-			return err
+			fmt.Println(tui.RenderStatus(false, "could not generate root CA certificate. please try again."))
+			return nil
 		}
 
 		cm.StoreRootCACertificateInSystemTrustStore()

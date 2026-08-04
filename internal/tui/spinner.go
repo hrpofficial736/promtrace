@@ -3,7 +3,6 @@ package tui
 import (
 	"io"
 	"net/http"
-
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -13,7 +12,6 @@ import (
 
 type SpinnerModel struct {
 	spinner spinner.Model
-	label   string
 	done    bool
 	Err     error
 
@@ -51,9 +49,13 @@ func doReplay(t *store.Trace, modelFlag string) tea.Cmd {
 			}
 		}
 
-		body, err := io.ReadAll(res.Body)
-		res.Body.Close()
-
+		body, _ := io.ReadAll(res.Body)
+		err = res.Body.Close()
+		if err != nil {
+			return DoneMsg{
+				err: err,
+			}
+		}
 		return DoneMsg{res: res, body: body, err: err}
 	}
 }

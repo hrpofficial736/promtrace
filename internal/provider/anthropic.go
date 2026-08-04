@@ -2,7 +2,6 @@ package provider
 
 import (
 	"encoding/json"
-	"github.com/hrpofficial736/promtrace/internal/logger"
 )
 
 type anthropicRequest struct {
@@ -30,7 +29,6 @@ func (e *AnthropicExtractor) ExtractRequest(body []byte, path string) (string, s
 	var req *anthropicRequest
 
 	if err := json.Unmarshal(body, &req); err != nil {
-		logger.Log.Error("error", "error", err)
 		return "", "", ""
 	}
 	var userPrompt string
@@ -47,7 +45,6 @@ func (e *AnthropicExtractor) ExtractResponse(body []byte) (string, int, int) {
 	var res *anthropicResponse
 
 	if err := json.Unmarshal(body, &res); err != nil {
-		logger.Log.Error("error", "error", err)
 		return "", 0, 0
 	}
 

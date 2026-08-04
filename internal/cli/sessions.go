@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"github.com/hrpofficial736/promtrace/internal/config"
-	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/store"
 	"github.com/hrpofficial736/promtrace/internal/tui"
 	"github.com/spf13/cobra"
@@ -27,14 +26,15 @@ func sessionsRun(cmd *cobra.Command, args []string) error {
 
 	cfg, err := config.Load()
 	if err != nil {
-		logger.Log.Error("error loading config", "error", err)
-		return err
+		errString := tui.RenderStatus(false, "could not load configuration. please run setup and try again.")
+		fmt.Println(errString)
+		return nil
 	}
 	store, err := store.NewSQLiteStore(cfg.DBPath)
 
 	if err != nil {
-		logger.Log.Error("error while making store", "error", err)
-		return err
+		fmt.Println(tui.RenderStatus(false, "could not open local trace store. please run setup and try again."))
+		return nil
 	}
 
 	sessions, err := store.ListSessions()

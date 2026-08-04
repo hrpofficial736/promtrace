@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+
 	"github.com/charmbracelet/lipgloss"
 	"github.com/hrpofficial736/promtrace/internal/diff"
 	"github.com/hrpofficial736/promtrace/internal/util"
@@ -39,15 +40,9 @@ func RenderDiff(d *diff.DiffResponseModel) string {
 	// ── Metrics section ──────────────────────────────────────────────────────
 	// Response length
 	respDelta := d.ResponseLength.Delta
-	respDeltaStr := fmt.Sprintf("%+d", respDelta)
-	var respDeltaStyled string
-	if respDelta < 0 {
-		respDeltaStyled = SuccessStyle.Render(respDeltaStr)
-	} else if respDelta > 0 {
-		respDeltaStyled = ErrorStyle.Render(respDeltaStr)
-	} else {
-		respDeltaStyled = MutedStyle.Render(respDeltaStr)
-	}
+	respDeltaStr := fmt.Sprintf("(%+d)", respDelta)
+	respDeltaStyled := BodyStyle.Render(respDeltaStr)
+
 	responseLengthLine := BodyStyle.Render(fmt.Sprintf(
 		"Response Length  %d chars → %d chars  ",
 		d.ResponseLength.A, d.ResponseLength.B,
@@ -55,7 +50,7 @@ func RenderDiff(d *diff.DiffResponseModel) string {
 
 	// Cost
 	costDelta := d.Cost.Delta
-	costDeltaStr := fmt.Sprintf("%+.6f", costDelta)
+	costDeltaStr := fmt.Sprintf("(%+.6f)", costDelta)
 	var costDeltaStyled string
 	if costDelta < 0 {
 		costDeltaStyled = SuccessStyle.Render(costDeltaStr)
@@ -71,7 +66,7 @@ func RenderDiff(d *diff.DiffResponseModel) string {
 
 	// Latency
 	latencyPct := d.Latency.PctChange
-	latencyPctStr := fmt.Sprintf("%+.2f%%", latencyPct)
+	latencyPctStr := fmt.Sprintf("(%+.2f%%)", latencyPct)
 	var latencyPctStyled string
 	if latencyPct < 0 {
 		latencyPctStyled = SuccessStyle.Render(latencyPctStr)

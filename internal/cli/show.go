@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"github.com/hrpofficial736/promtrace/internal/config"
-	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/store"
 	"github.com/hrpofficial736/promtrace/internal/tui"
 	"github.com/spf13/cobra"
@@ -28,20 +27,21 @@ var showCommand *cobra.Command = &cobra.Command{
 func showRun(cmd *cobra.Command, args []string) error {
 	cfg, err := config.Load()
 	if err != nil {
-		logger.Log.Error("error while loading config", "error", err)
-		return err
+		errString := tui.RenderStatus(false, "could not load configuration. please run setup and try again.")
+		fmt.Println(errString)
+		return nil
 	}
 
 	st, err := store.NewSQLiteStore(cfg.DBPath)
 
 	if err != nil {
-		logger.Log.Error("error while initializing store", "error", err)
-		return err
+		fmt.Println(tui.RenderStatus(false, "could not open local trace store. please run setup and try again."))
+		return nil
 	}
 
 	trace, err := st.GetTrace(args[0])
 	if err != nil {
-		logger.Log.Error("error", "error in getting trace", err)
+		fmt.Println(tui.RenderStatus(false, "trace not found. please check the trace ID and try again."))
 		return nil
 	}
 

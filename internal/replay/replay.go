@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/provider"
 	"github.com/hrpofficial736/promtrace/internal/store"
 )
@@ -19,12 +18,16 @@ func ReplayRequest(trace *store.Trace, modelFlag string) (*http.Response, error)
 	if modelFlag != "" {
 		var body map[string]any
 
-		json.Unmarshal(bodyBytes, &body)
+		err := json.Unmarshal(bodyBytes, &body)
+		if err != nil {
+			return nil, err
+		}
 
 		p := provider.GetProviderByHost(trace.Host)
-		if p.ModelIn == "body" {
+		switch p.ModelIn {
+		case "body":
 			body["model"] = modelFlag
-		} else if p.ModelIn == "url" {
+		case "url":
 			oldPathParts := strings.Split(trace.Path, "/")
 			newPathParts := oldPathParts[:len(oldPathParts)-1]
 
@@ -54,7 +57,6 @@ func ReplayRequest(trace *store.Trace, modelFlag string) (*http.Response, error)
 	err = provider.SetAuth(req, trace.Host)
 
 	if err != nil {
-		logger.Log.Error("error while getting api key", "error", err)
 		return nil, err
 	}
 

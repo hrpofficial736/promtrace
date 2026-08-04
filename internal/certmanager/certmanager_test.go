@@ -44,7 +44,10 @@ func TestGetOrCreateHostCertificate(t *testing.T) {
 	}
 
 	cm, _ := NewCertManager(cfg)
-	cm.GenerateRootCACertificate()
+	err := cm.GenerateRootCACertificate()
+	if err != nil {
+		t.Fatalf("GenerateRootCACertificate failed: %v", err)
+	}
 
 	cert, err := cm.GetOrCreateHostCertificate("example.com")
 	if err != nil {

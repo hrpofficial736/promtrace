@@ -8,7 +8,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"github.com/hrpofficial736/promtrace/internal/config"
-	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/truststore"
 	"math/big"
 	"os"
@@ -36,7 +35,6 @@ func generateCAKeyPair() (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 
 	if err != nil {
-		logger.Log.Info("error while generating private key")
 		return nil, nil, err
 	}
 
@@ -61,7 +59,6 @@ func (cm *CertManager) GenerateRootCACertificate() error {
 	privKey, pubKey, err := generateCAKeyPair()
 
 	if err != nil {
-		logger.Log.Info("error while generating keys")
 		return err
 	}
 
@@ -91,7 +88,6 @@ func (cm *CertManager) GenerateRootCACertificate() error {
 	caBytes, err := x509.CreateCertificate(rand.Reader, caTemplate, caTemplate, pubKey, privKey)
 
 	if err != nil {
-		logger.Log.Info("error while generating certificate")
 		return err
 	}
 
@@ -99,21 +95,31 @@ func (cm *CertManager) GenerateRootCACertificate() error {
 	caFile, err := os.Create(cm.cfg.CACert)
 
 	if err != nil {
-		logger.Log.Info("error while creating crt file")
 		return err
 	}
-	pem.Encode(caFile, &pem.Block{Type: "CERTIFICATE", Bytes: caBytes})
-	caFile.Close()
+	err = pem.Encode(caFile, &pem.Block{Type: "CERTIFICATE", Bytes: caBytes})
+	if err != nil {
+		return err
+	}
+	err = caFile.Close()
+	if err != nil {
+		return err
+	}
 
 	// creating CA private key file
 	keyFile, err := os.Create(cm.cfg.CAKey)
 
 	if err != nil {
-		logger.Log.Info("error while creating key file")
 		return err
 	}
-	pem.Encode(keyFile, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privKey)})
-	keyFile.Close()
+	err = pem.Encode(keyFile, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privKey)})
+	if err != nil {
+		return err
+	}
+	err = keyFile.Close()
+	if err != nil {
+		return err
+	}
 
 	cm.caCert = caTemplate
 	cm.caKey = privKey
@@ -128,7 +134,6 @@ func (cm *CertManager) StoreRootCACertificateInSystemTrustStore() {
 	case "darwin":
 		installer = truststore.DarwinInstaller{}
 	case "linux":
-		logger.Log.Debug("debug", "os name is", "linux")
 		installer = truststore.LinuxInstaller{}
 	case "windows":
 		installer = truststore.WindowsInstaller{}
@@ -137,7 +142,6 @@ func (cm *CertManager) StoreRootCACertificateInSystemTrustStore() {
 	err := installer.Install(cm.cfg.CACert)
 
 	if err != nil {
-		logger.Log.Debug("error", "panic in installing certs", err)
 		panic(err)
 	}
 }

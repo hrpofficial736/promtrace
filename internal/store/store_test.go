@@ -9,7 +9,12 @@ func TestSaveAndGetTrace(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create store: %v", err)
 	}
-	defer st.Close()
+	defer func() {
+		err := st.Close()
+		if err != nil {
+			t.Fatalf("failed to close store: %v", err)
+		}
+	}()
 
 	trace := &Trace{
 		ID:        "test-001",

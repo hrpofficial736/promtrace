@@ -2,7 +2,6 @@ package provider
 
 import (
 	"encoding/json"
-	"github.com/hrpofficial736/promtrace/internal/logger"
 )
 
 type openaiRequest struct {
@@ -31,14 +30,14 @@ func (e *OpenAIExtractor) ExtractRequest(body []byte, path string) (string, stri
 	var req *openaiRequest
 
 	if err := json.Unmarshal(body, &req); err != nil {
-		logger.Log.Error("error", "error", err)
 		return "", "", ""
 	}
 	var sysPrompt, userPrompt string
 	for _, msg := range req.Messages {
-		if msg.Role == "system" {
+		switch msg.Role {
+		case "system":
 			sysPrompt = msg.Content
-		} else if msg.Role == "user" {
+		case "user":
 			userPrompt = msg.Content
 		}
 	}
@@ -50,7 +49,6 @@ func (e *OpenAIExtractor) ExtractResponse(body []byte) (string, int, int) {
 	var res *openaiResponse
 
 	if err := json.Unmarshal(body, &res); err != nil {
-		logger.Log.Error("error", "error", err)
 		return "", 0, 0
 	}
 

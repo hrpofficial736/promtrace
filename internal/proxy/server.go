@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/hrpofficial736/promtrace/internal/certmanager"
-	"github.com/hrpofficial736/promtrace/internal/logger"
 	"github.com/hrpofficial736/promtrace/internal/provider"
 	"github.com/hrpofficial736/promtrace/internal/store"
 	"github.com/hrpofficial736/promtrace/internal/util"
@@ -60,13 +59,15 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 	hijacker, _ := w.(http.Hijacker)
 	clientConn, _, _ := hijacker.Hijack()
 
-	clientConn.Write([]byte("HTTP/1.1 200 Connection Established\r\n\r\n"))
+	_, err := clientConn.Write([]byte("HTTP/1.1 200 Connection Established\r\n\r\n"))
+	if err != nil {
+		return
+	}
 
 	// getting a fake tls certificate
 	hostCert, err := ps.certMgr.GetOrCreateHostCertificate(host)
 
 	if err != nil {
-		logger.Log.Error("error while generating host certs", "error", err)
 		return
 	}
 
@@ -74,7 +75,6 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 	tlsConfig := &tls.Config{Certificates: []tls.Certificate{*hostCert}}
 	tlsConn := tls.Server(clientConn, tlsConfig)
 	if err := tlsConn.Handshake(); err != nil {
-		logger.Log.Error("error while handshaking with the subprocess", "error", err)
 		return
 	}
 
@@ -85,17 +85,18 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 	req, err := http.ReadRequest(reader)
 
 	if err != nil {
-		logger.Log.Error("error while reading request", "error", err)
 		return
 	}
 
 	reqBody, err := io.ReadAll(req.Body)
 	if err != nil {
-		logger.Log.Error("error while parsing req body", "error", err)
 		return
 	}
 
-	req.Body.Close()
+	err = req.Body.Close()
+	if err != nil {
+		return
+	}
 
 	req.Body = io.NopCloser(bytes.NewReader(reqBody))
 
@@ -103,47 +104,52 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 	upstreamConn, err := tls.Dial("tcp", r.Host, &tls.Config{})
 
 	if err != nil {
-		logger.Log.Error("error while opening real connection with the actual server", "error", err)
 		return
 	}
 	ps.upstreamConn = upstreamConn
 	// forwarding request to the real server
-	req.Write(upstreamConn)
+	err = req.Write(upstreamConn)
+	if err != nil {
+		return
+	}
 
 	start := time.Now()
 	// reading response from the real server
 	resp, err := http.ReadResponse(bufio.NewReader(upstreamConn), req)
 
 	if err != nil {
-		logger.Log.Error("error while reading response from the actual server", "error", err)
 		return
 	}
 
 	respBody, err := io.ReadAll(resp.Body)
 
 	if err != nil {
-		logger.Log.Error("error while parsing resp body", "error", err)
 		return
 	}
 
 	latency := time.Since(start).Milliseconds()
 
-	resp.Body.Close()
+	err = resp.Body.Close()
+	if err != nil {
+		return
+	}
 
 	resp.Body = io.NopCloser(bytes.NewReader(respBody))
 
 	if resp.Header.Get("Content-Encoding") == "gzip" {
 		gr, err := gzip.NewReader(bytes.NewReader(respBody))
 		if err == nil {
-			respBody, err = io.ReadAll(gr)
-			gr.Close()
+			respBody, _ = io.ReadAll(gr)
+			err = gr.Close()
+			if err != nil {
+				return
+			}
 		}
 	}
 
 	ext := provider.GetExtractor(host)
 
 	if ext == nil {
-		logger.Log.Error("invalid host name", "host", host)
 		return
 	}
 
@@ -161,7 +167,7 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 
 	// saving the trace
 
-	ps.store.SaveTrace(
+	err = ps.store.SaveTrace(
 		&store.Trace{
 			ID:           util.GenerateID(),
 			SessionID:    ps.sessionID,
@@ -181,18 +187,30 @@ func (ps *ProxyServer) handleConnect(w http.ResponseWriter, r *http.Request) {
 			CreatedAt:    now,
 		},
 	)
+	if err != nil {
+		return
+	}
 
 	// forwarding the response back to the subprocess
-	resp.Write(tlsConn)
+	err = resp.Write(tlsConn)
+	if err != nil {
+		return
+	}
 }
 
 func (ps *ProxyServer) Shutdown() error {
 	if ps.tlsConn != nil {
-		ps.tlsConn.Close()
+		err := ps.tlsConn.Close()
+		if err != nil {
+			return err
+		}
 	}
 
 	if ps.upstreamConn != nil {
-		ps.upstreamConn.Close()
+		err := ps.upstreamConn.Close()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
