@@ -1,6 +1,7 @@
 ## **promtrace**
 
-promtrace is an LLM call interceptor and a CLI-based LLM observability tool that shows exactly what prompts your app sends, how much they cost, and when they change unexpectedly, without code modifications.
+**promtrace** is a CLI-based LLM observability tool and LLM call interceptor that acts as a transparent man-in-the-middle (MITM) proxy. it captures every LLM request your application makes, showing the exact prompts being sent, token usage, latency, estimated cost, and unexpected prompt changes—all without requiring any code modifications.
+
 
 ## **prerequisites**
 
