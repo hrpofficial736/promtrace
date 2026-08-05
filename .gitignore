@@ -4,3 +4,5 @@
 bin/
 *.py
 promtrace
+.obsidian
+.github

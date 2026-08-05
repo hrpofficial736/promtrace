@@ -1,0 +1,163 @@
+## **promtrace**
+
+promtrace is an LLM call interceptor and LLM observability tool in form of CLI that shows exactly what prompts your app sends, what they cost, and when they silently change — with zero code modifications.
+
+## **prerequisites**
+
+1. go 1.24.5 or later.
+2. permission to install a root CA in the OS's trust store.
+3. SQLite is used as local trace store using the package `go-sqlite3`.
+
+## **installation**
+
+#### **(a) install from binaries**
+
+**windows**:
+
+
+**linux**:
+
+
+macOS:
+
+#### **(b) install and build from source**
+
+```
+make build
+make test
+make lint
+make install
+```
+
+
+## **how to use promtrace**
+
+> **NOTE:**
+> code snippets or examples shown here are based on Fedora Linux 42 Workstation Edition.
+
+1. use the `promtrace` command to display CLI information.
+
+![root-command](./sample-images/root-command.png)
+
+2. run `setup` command to setup promtrace for TLS interception:
+
+```
+> promtrace setup
+Enter your password: 
+promtrace is ready, get started by wrapping a sub-process.
+```
+
+2. wrap your app or a sub-process using `wrap` command:
+
+```
+> promtrace wrap python server.py
+```
+
+now, promtrace will start intercepting all the LLM calls from your app transparently.
+
+> **NOTE:**
+> promtrace will show no outputs of its own, only the stdout from your app will be shown if any.
+
+3. to watch the traces of LLM requests from your app in real time, use the `watch` command:
+
+![watch command output](./sample-images/watch-command.png)
+
+use arrow keys to navigate up and down, press 'q' to quit, and press 'enter' on a trace to check more info about it.
+
+4. to check more info about a trace specifically, use `show` command followed by the ID of that trace:
+
+![show-command](./sample-images/show-command.png)
+
+5. one `wrap` command initiated a single session with it, and all the sessions can be seen using `sessions` command:
+
+![sessions-command](./sample-images/sessions-command.png)
+
+6. to check the stats and per day trend of cost, tokens, latency of the promtrace, use the `stats` command with a `--last` flag to specify the duration under which stats is to be displayed (e.g., 7d, 24h, 60m, 60s etc.):
+
+![stats-command](./sample-images/stats-command.png)
+
+7. to compare two traces, use the `diff` command, followed by the id of two traces:
+
+![diff-command](./sample-images/diff-command.png)
+
+> **NOTE:**
+> the trace whose ID comes later will be compared against the trace whose ID comes before.
+
+8. you can also replay a trace on your own manually with a different model using `replay` command:
+
+![replay-command](./sample-images/replay-command.png)
+
+> **NOTE:**
+> before running replay command, make sure that you have exported the required API key for the model you are using for replay with the appropriate key name: OPENAI_API_KEY, GEMINI_API_KEY or ANTHROPIC_API_KEY.
+
+9. to export your traces into stdout in `json` or `jsonl` format, you can use `export` command with `--format` flag (default: `jsonl`):
+
+```bash
+> promtrace export
+# traces will be written to stdout in your terminal in default jsonl format.
+```
+
+```bash
+> promtrace export --format json
+# traces will be written to stdout in your terminal in json format.
+```
+
+```bash
+> promtrace export --format json > traces.json
+# you can also redirect the output to a file to save those traces on the disk.
+```
+
+
+## **important note**
+
+to get help related to any command, use:
+
+```bash
+> promtrace <command_name> --help
+```
+
+
+## **troubleshooting**
+
+##### **`replay` command issues**
+
+(a) if you are encountering following error:
+
+```bash
+✗ could not replay the request. the selected model is either unsupported or does not match the original provider family. please choose a compatible model and try again.
+```
+
+then that means either you have written an unsupported model name in the `--model` flag, or the model you have written belongs to a different LLM family, use the model from the same family as in the original trace.
+
+(b) if you are encountering above error:
+
+```bash
+✗ could not replay the request. please try again.
+```
+
+ then that means the required API key is missing from your OS environment variables, export the appropriate API key:
+
+- in case of open ai models, use:
+
+```bash
+> export OPENAI_API_KEY=<YOUR OPENAI API KEY>
+```
+
+- in case of gemini models, use:
+
+```bash
+> export GEMINI_API_KEY=<YOUR GEMINI API KEY>
+```
+
+- in case of anthropic models, use:
+
+```bash
+> export ANTHROPIC_API_KEY=<YOUR ANTHROPIC API KEY>
+```
+
+
+## **final note**
+
+promtrace will be becoming even better in its upcoming versions, so stay tuned and it is entirely open source, so feel free to contribute to this repository.
+
+## **enjoy promtrace!**
