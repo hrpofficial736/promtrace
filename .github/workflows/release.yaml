@@ -50,7 +50,7 @@ jobs:
             ext=".exe"
           fi
           GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} CGO_ENABLED=1 \
-          go build -o "dist/promtrace-${{ matrix.goos }}-${{ matrix.goarch }}${ext}" ./cmd/promtrace
+          go build -x -v -o "dist/promtrace-${{ matrix.goos }}-${{ matrix.goarch }}${ext}" ./cmd/promtrace
 
       - uses: actions/upload-artifact@v4
         with:
