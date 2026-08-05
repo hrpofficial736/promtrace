@@ -72,7 +72,7 @@ now, promtrace will start intercepting all the LLM calls from your app transpare
 > promtrace will show no outputs of its own, only the stdout from your app will be shown if any.
 
 
-4. to watch the traces of LLM requests from your app in real time, use the `watch` command:
+4. to stream traces in real time, use the `watch` command:
 
 ![watch command output](./sample-images/watch-command.png)
 
@@ -85,12 +85,12 @@ use arrow keys to navigate up and down, press 'q' to quit, and press 'enter' on 
 ![show-command](./sample-images/show-command.png)
 
 
-6. each `wrap` command starts a single session, and you can view all sessions with `sessions` command:
+6. each `wrap` command creates one session, and you can view all sessions with `sessions` command:
 
 ![sessions-command](./sample-images/sessions-command.png)
 
 
-7. to check the stats and per day trend of cost, tokens, latency of the promtrace, use the `stats` command with a `--last` flag to specify the duration under which stats is to be displayed (e.g., 7d, 24h, 60m, 60s etc.):
+7. to check the stats and per day trends for cost, tokens, latency, use the `stats` command with a `--last` flag to specify the duration for which stats should be displayed (e.g., 7d, 24h, 60m, 60s etc.):
 
 ![stats-command](./sample-images/stats-command.png)
 
@@ -150,7 +150,7 @@ to get help related to any command, use:
 ✗ could not replay the request. the selected model is either unsupported or does not match the original provider family. please choose a compatible model and try again.
 ```
 
-then that means either you have written an unsupported model name in the `--model` flag, or the model you have written belongs to a different LLM family, use the model from the same family as in the original trace.
+then that means either you have written an unsupported model name in the `--model` flag, or the model you have written belongs to a different provider family, use the model from the same family as in the original trace.
 
 
 (b) if you are encountering above error:
