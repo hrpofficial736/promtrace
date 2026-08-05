@@ -68,7 +68,8 @@ jobs:
           path: release
 
       - name: create checksum file
-        run: sha256 release/** > release/checksums.txt
+        run: |
+          find release -type f ! -name checksums.txt -exec sha256sum {} \; > release/checksums.txt
 
       - name: publish github release
         uses: softprops/action-gh-release@v2
