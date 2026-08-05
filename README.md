@@ -1,12 +1,12 @@
 ## **promtrace**
 
-promtrace is an LLM call interceptor and LLM observability tool in form of CLI that shows exactly what prompts your app sends, what they cost, and when they silently change — with zero code modifications.
+promtrace is an LLM call interceptor and a CLI-based LLM observability tool that shows exactly what prompts your app sends, how much they cost, and when they change unexpectedly, without code modifications.
 
 ## **prerequisites**
 
 1. go 1.24.5 or later.
-2. permission to install a root CA in the OS's trust store.
-3. SQLite is used as local trace store using the package `go-sqlite3`.
+2. permission to install a root CA into the OS trust store.
+3. SQLite is used as the local trace store via `go-sqlite3`.
 
 ## **installation**
 
@@ -14,11 +14,20 @@ promtrace is an LLM call interceptor and LLM observability tool in form of CLI t
 
 **windows**:
 
+- [**for amd64 machines**](https://github.com/hrpofficial736/promtrace/releases/download/v0.1.0/promtrace-windows-amd64.exe)
 
 **linux**:
 
+- [**for amd64 machines**](https://github.com/hrpofficial736/promtrace/releases/download/v0.1.0/promtrace-linux-amd64)
+- [**for arm64 machines**](https://github.com/hrpofficial736/promtrace/releases/download/v0.1.0/promtrace-linux-arm64)
 
 macOS:
+
+- [**for amd64 machines**](https://github.com/hrpofficial736/promtrace/releases/download/v0.1.0/promtrace-darwin-amd64)
+- [**for arm64 machines**](https://github.com/hrpofficial736/promtrace/releases/download/v0.1.0/promtrace-darwin-arm64)
+
+> **NOTE:**
+> verify the download with the checksums file before running it.
 
 #### **(b) install and build from source**
 
@@ -35,11 +44,13 @@ make install
 > **NOTE:**
 > code snippets or examples shown here are based on Fedora Linux 42 Workstation Edition.
 
+
 1. use the `promtrace` command to display CLI information.
 
 ![root-command](./sample-images/root-command.png)
 
-2. run `setup` command to setup promtrace for TLS interception:
+
+2. run the `setup` command to setup promtrace for TLS interception:
 
 ```
 > promtrace setup
@@ -47,7 +58,8 @@ Enter your password:
 promtrace is ready, get started by wrapping a sub-process.
 ```
 
-2. wrap your app or a sub-process using `wrap` command:
+
+3. wrap your app or a sub-process using `wrap` command:
 
 ```
 > promtrace wrap python server.py
@@ -55,42 +67,53 @@ promtrace is ready, get started by wrapping a sub-process.
 
 now, promtrace will start intercepting all the LLM calls from your app transparently.
 
+
 > **NOTE:**
 > promtrace will show no outputs of its own, only the stdout from your app will be shown if any.
 
-3. to watch the traces of LLM requests from your app in real time, use the `watch` command:
+
+4. to watch the traces of LLM requests from your app in real time, use the `watch` command:
 
 ![watch command output](./sample-images/watch-command.png)
 
+
 use arrow keys to navigate up and down, press 'q' to quit, and press 'enter' on a trace to check more info about it.
 
-4. to check more info about a trace specifically, use `show` command followed by the ID of that trace:
+
+5. to check more info about a trace specifically, use `show` command followed by the ID of that trace:
 
 ![show-command](./sample-images/show-command.png)
 
-5. one `wrap` command initiated a single session with it, and all the sessions can be seen using `sessions` command:
+
+6. each `wrap` command starts a single session, and you can view all sessions with `sessions` command:
 
 ![sessions-command](./sample-images/sessions-command.png)
 
-6. to check the stats and per day trend of cost, tokens, latency of the promtrace, use the `stats` command with a `--last` flag to specify the duration under which stats is to be displayed (e.g., 7d, 24h, 60m, 60s etc.):
+
+7. to check the stats and per day trend of cost, tokens, latency of the promtrace, use the `stats` command with a `--last` flag to specify the duration under which stats is to be displayed (e.g., 7d, 24h, 60m, 60s etc.):
 
 ![stats-command](./sample-images/stats-command.png)
 
-7. to compare two traces, use the `diff` command, followed by the id of two traces:
+
+8. to compare two traces, use the `diff` command, followed by the id of two traces:
 
 ![diff-command](./sample-images/diff-command.png)
+
 
 > **NOTE:**
 > the trace whose ID comes later will be compared against the trace whose ID comes before.
 
-8. you can also replay a trace on your own manually with a different model using `replay` command:
+
+9. you can also replay a trace with a different model using `replay` command:
 
 ![replay-command](./sample-images/replay-command.png)
+
 
 > **NOTE:**
 > before running replay command, make sure that you have exported the required API key for the model you are using for replay with the appropriate key name: OPENAI_API_KEY, GEMINI_API_KEY or ANTHROPIC_API_KEY.
 
-9. to export your traces into stdout in `json` or `jsonl` format, you can use `export` command with `--format` flag (default: `jsonl`):
+
+10. to export your traces into stdout in `json` or `jsonl` format, you can use `export` command with `--format` flag (default: `jsonl`):
 
 ```bash
 > promtrace export
@@ -129,6 +152,7 @@ to get help related to any command, use:
 
 then that means either you have written an unsupported model name in the `--model` flag, or the model you have written belongs to a different LLM family, use the model from the same family as in the original trace.
 
+
 (b) if you are encountering above error:
 
 ```bash
@@ -158,6 +182,6 @@ then that means either you have written an unsupported model name in the `--mode
 
 ## **final note**
 
-promtrace will be becoming even better in its upcoming versions, so stay tuned and it is entirely open source, so feel free to contribute to this repository.
+promtrace will keep getting better, so stay tuned and it is entirely open source, so feel free to contribute to this repository.
 
-## **enjoy promtrace!**
+enjoy promtrace!
